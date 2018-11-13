@@ -411,9 +411,25 @@
               <FilePath>.\src\graphics.c</FilePath>
             </File>
             <File>
+<<<<<<< HEAD
               <FileName>sprites.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\sprites.c</FilePath>
+=======
+              <FileName>helper.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\helper.c</FilePath>
+            </File>
+            <File>
+              <FileName>player.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\player.c</FilePath>
+            </File>
+            <File>
+              <FileName>terrain.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\terrain.c</FilePath>
+>>>>>>> a086b73729ac24a8c95cd980ce13e69edaa522cd
             </File>
           </Files>
         </Group>
