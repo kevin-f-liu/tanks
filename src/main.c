@@ -6,6 +6,7 @@
 #include "GLCD.h"
 #include "player.h"
 #include "graphics.h"
+#include "helper.h"
 
 Player p1, p2;
 
@@ -96,6 +97,7 @@ void gameWorker(void const *arg) {
         // wait for semaphore
         osSemaphoreWait(semaphore, osWaitForever);
         printf("%d, %d\n", changePos, changeAim);
+				busyWait(100000);
         printf("%d, %d\n", potValue, firepower);
         // Use current values for projectile and stuff
         // check if game ends
