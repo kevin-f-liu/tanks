@@ -1,7 +1,8 @@
-#include "graphics.h"
-#include "uart.h"
 #ifndef PLAYER
 #define PLAYER
+
+#include "terrain.h"
+#include "uart.h"
 
 typedef struct {
   // HP max 100
