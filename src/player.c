@@ -10,7 +10,7 @@ int16_t processValue(int16_t val, int16_t upperbound, int16_t lowerbound) {
 
 void updatePosition(Player *p, int16_t newX, Terrain terrain) {
   p->x = processValue(newX, 319, 0);
-  p->y = 0;
+  p->y = closestY(terrain, p->x, p->y);
 }
 
 void updateAim(Player *p, int16_t newAim) {

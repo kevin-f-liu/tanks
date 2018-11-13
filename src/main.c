@@ -7,6 +7,7 @@
 #include "graphics.h"
 #include "helper.h"
 #include "player.h"
+#include "terrain.h"
 
 Player p1, p2;
 
@@ -24,14 +25,15 @@ osSemaphoreDef(semaphore);
 Terrain terrain;
 
 void setupGame() {
-  // TODO: generate terrain here
+  // generate terrain here
+  generateTerrain(&terrain);
   p1.HP = 100;
   p1.aimAngle = 0;
-  updatePosition(&p1, random(0, 160), terrain);
+  updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), terrain);
 
   p2.HP = 100;
   p2.aimAngle = 180;
-  updatePosition(&p2, random(160, 319), terrain);
+  updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), terrain);
   printf("Pos: %d, %d\n", p1.x, p2.x);
   printf("Aim: %d, %d\n", p1.aimAngle, p2.aimAngle);
 }
@@ -50,6 +52,7 @@ void potentiometerWorker(void const *arg) {
     while (~LPC_ADC->ADGDR & (0x01 << 31))
       ;
     potValue = (LPC_ADC->ADGDR & (0xfff << 4)) >> 4;
+    // cast firepower to 1 to 100
     firepower = ((double)potValue) / 4096 * 100 + 1;
     osThreadYield();
   }
@@ -95,7 +98,6 @@ void joystickWorker(void const *arg) {
 }
 
 void pushbuttonWorker(void const *arg) {
-  bool state = false;
   bool lastButtonState = false;
   while (true) {
     if ((~LPC_GPIO2->FIOPIN & (0x01 << 10)) != lastButtonState &&
