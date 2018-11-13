@@ -19,6 +19,8 @@ uint8_t changeAim = 0;
 // current potentiometer
 uint16_t potValue;
 bool newGame = false;
+osSemaphoreId semaphore;
+osSemaphoreDef(semaphore);
 
 void potentiometerWorker(void const *arg) {
     LPC_PINCON->PINSEL1 &= ~(0x03 << 18);
@@ -62,7 +64,6 @@ void joystickWorker(void const *arg) {
     }
 }
 
-// TODO: signal semaphore or reset game
 void pushbuttonWorker(void const *arg) {
     bool state = false;
     bool lastButtonState = false;
@@ -73,6 +74,8 @@ void pushbuttonWorker(void const *arg) {
             if (newGame) {
                 // reset game
             } else {
+                // signal semaphore
+                osSemaphoreRelease(semaphore);
             }
 
         } else if (!(~LPC_GPIO2->FIOPIN & (0x01 << 10))) {
@@ -84,9 +87,13 @@ void pushbuttonWorker(void const *arg) {
 
 void gameWorker(void const *arg) {
     while (true) {
-        // TODO: wait for semaphore
+        // wait for semaphore
+        osSemaphoreWait(semaphore, osWaitForever);
         // Use current values for projectile and stuff
         // check if game ends
+        if (p1.HP <= 0 || p2.HP <= 0) {
+            newGame = true;
+        }
         osThreadYield();
     }
 }
@@ -94,5 +101,7 @@ void gameWorker(void const *arg) {
 osThreadDef(potentiometerWorker, osPriorityNormal, 1, 0);
 osThreadDef(joystickWorker, osPriorityNormal, 1, 0);
 osThreadDef(pushbuttonWorker, osPriorityNormal, 1, 0);
-// maybe make this high
-osThreadDef(gameWorker, osPriorityNormal, 1, 0);
+// test: semaphore should block game worker
+// once semaphore is available run the animation and calculations
+osThreadDef(gameWorker, osPriorityHigh, 1, 0);
+// graphics thread should have a high priority as well, but has a delay so it wont block the other stuff?
