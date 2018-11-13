@@ -410,6 +410,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\graphics.c</FilePath>
             </File>
+            <File>
+              <FileName>sprites.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\sprites.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
