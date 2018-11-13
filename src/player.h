@@ -15,6 +15,7 @@ typedef struct {
 } Player;
 
 void updateHealth(Player *p, uint16_t landX, uint16_t landY);
-void updatePosition(Player *p, uint16_t newX, Terrain terrain);
+void updatePosition(Player *p, int16_t newX, Terrain terrain);
+void updateAim(Player *p, int16_t newAim);
 
 #endif
