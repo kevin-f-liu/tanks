@@ -410,6 +410,21 @@
               <FileType>1</FileType>
               <FilePath>.\src\graphics.c</FilePath>
             </File>
+            <File>
+              <FileName>helper.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\helper.c</FilePath>
+            </File>
+            <File>
+              <FileName>player.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\player.c</FilePath>
+            </File>
+            <File>
+              <FileName>terrain.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\terrain.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
