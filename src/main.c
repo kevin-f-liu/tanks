@@ -14,19 +14,26 @@ Player p1, p2;
 uint8_t firepower = 100;
 bool isP1 = true;
 
-// change in horizontal position
-uint8_t changePos = 0;
-// change in aim
-uint8_t changeAim = 0;
 // current potentiometer
 uint16_t potValue;
-bool newGame = false;
+bool newGame = true;
+
 osSemaphoreId semaphore;
 osSemaphoreDef(semaphore);
 
+Terrain terrain;
+
 void setupGame() {
+  // TODO: generate terrain here
   p1.HP = 100;
+  p1.aimAngle = 0;
+  updatePosition(&p1, random(0, 160), terrain);
+
   p2.HP = 100;
+  p2.aimAngle = 180;
+  updatePosition(&p2, random(160, 319), terrain);
+  printf("Pos: %d, %d\n", p1.x, p2.x);
+  printf("Aim: %d, %d\n", p1.aimAngle, p2.aimAngle);
 }
 
 void potentiometerWorker(void const *arg) {
@@ -50,23 +57,40 @@ void potentiometerWorker(void const *arg) {
 
 void joystickWorker(void const *arg) {
   while (1) {
+    // change in horizontal position
+    int8_t changePos = 0;
+    // change in aim
+    int8_t changeAim = 0;
+    bool delay = true;
     switch (~(LPC_GPIO1->FIOPIN) & 0x07800000) {
       case 0x01000000:
-        changeAim++;
-        break;
-      case 0x00800000:
         changePos++;
         break;
-      case 0x02000000:
-        changePos--;
-        break;
-      case 0x04000000:
+        // down is counter clockwise (25)
+      case 0x00800000:
         changeAim--;
         break;
+        // up is clockwise (23)
+      case 0x02000000:
+        changeAim++;
+        break;
+      case 0x04000000:
+        changePos--;
+        break;
       default:
+        delay = false;
         break;
     }
-    osThreadYield();
+    if (delay) {
+      if (isP1) {
+        updatePosition(&p1, changePos + p1.x, terrain);
+        updateAim(&p1, changeAim + p1.aimAngle);
+      } else {
+        updatePosition(&p2, changePos + p2.x, terrain);
+        updateAim(&p2, changeAim + p2.aimAngle);
+      }
+      osDelay(1000);
+    }
   }
 }
 
@@ -80,6 +104,7 @@ void pushbuttonWorker(void const *arg) {
       if (newGame) {
         // reset game
         setupGame();
+        newGame = false;
       } else {
         // signal semaphore
         osSemaphoreRelease(semaphore);
@@ -96,13 +121,17 @@ void gameWorker(void const *arg) {
   while (true) {
     // wait for semaphore
     osSemaphoreWait(semaphore, osWaitForever);
-    printf("%d, %d\n", changePos, changeAim);
-    busyWait(100000);
-    printf("%d, %d\n", potValue, firepower);
+    printf("Pos: %d, %d\n", p1.x, p2.x);
+    printf("Aim: %d, %d\n", p1.aimAngle, p2.aimAngle);
+    printf("Firepower: %d\n", firepower);
+    busyWait(10000000);
     // Use current values for projectile and stuff
     // check if game ends
     if (p1.HP <= 0 || p2.HP <= 0) {
       newGame = true;
+    } else {
+      // switch turn
+      isP1 = !isP1;
     }
     osThreadYield();
   }
@@ -122,11 +151,10 @@ int main(void) {
   // Unit UART printing,
   // Init kernel
   // Init 3 threads for data collection, processing, and sending
-  printf("Starting");
+  printf("Starting\n");
   osKernelInitialize();
   osKernelStart();
   semaphore = osSemaphoreCreate(osSemaphore(semaphore), 0);
-  setupGame();
   osThreadId t1 = osThreadCreate(osThread(potentiometerWorker), NULL);
   osThreadId t2 = osThreadCreate(osThread(joystickWorker), NULL);
   osThreadId t3 = osThreadCreate(osThread(pushbuttonWorker), NULL);
