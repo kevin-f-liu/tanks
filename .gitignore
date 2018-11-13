@@ -1,3 +1,5 @@
 .vscode
 *.uvguix.*
 *.uvoptx
+
+*.TMP

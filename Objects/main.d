@@ -15,3 +15,4 @@
 .\objects\main.o: src\GLCD.h
 .\objects\main.o: src\player.h
 .\objects\main.o: src\uart.h
+.\objects\main.o: src\graphics.h

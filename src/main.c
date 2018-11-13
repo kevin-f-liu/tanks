@@ -5,6 +5,7 @@
 #include <string.h>
 #include "GLCD.h"
 #include "player.h"
+#include "graphics.h"
 
 Player p1, p2;
 
@@ -98,6 +99,8 @@ void gameWorker(void const *arg) {
     }
 }
 
+
+
 osThreadDef(potentiometerWorker, osPriorityNormal, 1, 0);
 osThreadDef(joystickWorker, osPriorityNormal, 1, 0);
 osThreadDef(pushbuttonWorker, osPriorityNormal, 1, 0);
@@ -105,3 +108,11 @@ osThreadDef(pushbuttonWorker, osPriorityNormal, 1, 0);
 // once semaphore is available run the animation and calculations
 osThreadDef(gameWorker, osPriorityHigh, 1, 0);
 // graphics thread should have a high priority as well, but has a delay so it wont block the other stuff?
+osThreadDef(graphicsWorker, osPriorityNormal, 1, 0);
+
+int main(void) {
+	printf("Starting graphics\n");
+	osKernelInitialize();
+	osKernelStart();
+	osThreadCreate(osThread(graphicsWorker), NULL);
+}
