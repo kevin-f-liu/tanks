@@ -9,8 +9,10 @@
 #define TERRAIN_WIDTH 320 // Screen width in pixels
 #define TERRAIN_HEIGHT 240 // Screen width in pixels
 
+typedef char Terrain;
+
 // Global terrain array
-extern char terrain[TERRAIN_HEIGHT][TERRAIN_WIDTH];
+extern Terrain terrain;
 
 
 extern void graphicsWorker(void const *arg);

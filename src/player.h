@@ -1,3 +1,4 @@
+#include "graphics.h"
 #include "uart.h"
 #ifndef PLAYER
 #define PLAYER
@@ -14,6 +15,6 @@ typedef struct {
 } Player;
 
 void updateHealth(Player *p, uint16_t landX, uint16_t landY);
-void updatePosition(Player *p, uint32_t terrain);
+void updatePosition(Player *p, uint16_t newX, Terrain terrain);
 
 #endif
