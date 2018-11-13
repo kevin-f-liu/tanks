@@ -22,6 +22,11 @@ bool newGame = false;
 osSemaphoreId semaphore;
 osSemaphoreDef(semaphore);
 
+void setupGame(){
+	p1.HP = 100;
+	p2.HP = 100;
+}
+
 void potentiometerWorker(void const *arg) {
     LPC_PINCON->PINSEL1 &= ~(0x03 << 18);
     LPC_PINCON->PINSEL1 |= (0x01 << 18);
@@ -36,7 +41,7 @@ void potentiometerWorker(void const *arg) {
         while (~LPC_ADC->ADGDR & (0x01 << 31))
             ;
         potValue = (LPC_ADC->ADGDR & (0xfff << 4)) >> 4;
-        printf("%d\n", potValue);
+				firepower = ((double)potValue)/4096 * 100 + 1;
         osThreadYield();
     }
 }
@@ -59,7 +64,6 @@ void joystickWorker(void const *arg) {
             default:
                 break;
         }
-        printf("%d, %d\n", changePos, changeAim);
         osThreadYield();
     }
 }
@@ -72,7 +76,8 @@ void pushbuttonWorker(void const *arg) {
             !lastButtonState) {
             lastButtonState = true;
             if (newGame) {
-                // reset game
+                // reset game							
+								setupGame();
             } else {
                 // signal semaphore
                 osSemaphoreRelease(semaphore);
@@ -89,6 +94,8 @@ void gameWorker(void const *arg) {
     while (true) {
         // wait for semaphore
         osSemaphoreWait(semaphore, osWaitForever);
+        printf("%d, %d\n", changePos, changeAim);
+        printf("%d, %d\n", potValue, firepower);
         // Use current values for projectile and stuff
         // check if game ends
         if (p1.HP <= 0 || p2.HP <= 0) {
@@ -105,3 +112,22 @@ osThreadDef(pushbuttonWorker, osPriorityNormal, 1, 0);
 // once semaphore is available run the animation and calculations
 osThreadDef(gameWorker, osPriorityHigh, 1, 0);
 // graphics thread should have a high priority as well, but has a delay so it wont block the other stuff?
+
+
+int main(void){
+	// Unit UART printing,
+	// Init kernel
+	// Init 3 threads for data collection, processing, and sending
+	printf("");
+	osKernelInitialize();
+	osKernelStart();
+	semaphore = osSemaphoreCreate(osSemaphore(semaphore), 0);
+	setupGame();
+	osThreadId t1 = osThreadCreate(osThread(potentiometerWorker), NULL);
+	osThreadId t2 = osThreadCreate(osThread(joystickWorker), NULL);
+	osThreadId t3 = osThreadCreate(osThread(pushbuttonWorker), NULL);	
+	osThreadId t4 = osThreadCreate(osThread(gameWorker), NULL);	
+	
+	// Continue that main thread forever
+	while(1);
+}
