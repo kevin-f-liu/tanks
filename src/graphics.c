@@ -116,13 +116,15 @@ void graphicsWorker(void const *arg) {
 	initGraphics(BACKGROUND_COLOR, BACKGROUND_COLOR, Black);
 	int count = 0;
 	char result[12]; // Temp storage string
-    
+  
+	//init_barrelmap();
+	load_barrelmap(0);
     
 	while(true) {
 		sprintf(result, "%d", count);
 		displayStringToLCD(5, 5, 0, result, 12);
 		
-		updateTank(count, count, 1);
+		//updateTank(count, count, 1);
 		count++;
 		osDelay(3000);
 	}

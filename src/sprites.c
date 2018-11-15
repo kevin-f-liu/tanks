@@ -6,8 +6,24 @@
 #include "GLCD.h"
 #include "graphics.h"
 #include "sprites.h"
+#include "math.h"
 
 #define BARREL_LENGTH 7
+#define BARREL_COLOR 0x0000
+
+float fast_invsqrt(float number) {
+	long i;
+	float x2, y;
+	const float threehalfs = 1.5F;
+	x2 = number * 0.5F;
+	y  = number;
+	i  = * ( long * ) &y;      
+	i  = 0x5f3759df - ( i >> 1 );
+	y  = * ( float * ) &i;
+	y  = y * ( threehalfs - ( x2 * y * y ) );   // 1st iteration
+
+	return y;
+}
 
  const uint16_t tankmap[] = {
     0xffff, 0xffde, 0xffff, 0xf79e, 0xffff, 0xffdf, 0xffff, 0x0000, 0x0000, 0x0041, 0x0000, 0x0021, 0x0021, 0x0000, 0x0020, 0x0000, 
@@ -40,14 +56,53 @@
  
 uint16_t barrelmap[TANK_WIDTH*TANK_WIDTH];
 
+void print_barrelmap(void) {
+	for (int idx = 0; idx < TANK_WIDTH * TANK_WIDTH; idx++) {
+		printf("%x ", barrelmap[idx]);
+		if (!(idx % TANK_WIDTH)) printf("\n");
+	}
+}
+
+void init_barrelmap(void) {
+	for (int idx = 0; idx < TANK_WIDTH * TANK_WIDTH; idx++) {
+		barrelmap[idx] = BACKGROUND_COLOR;
+	}
+	
+	print_barrelmap();
+}
+
 void load_barrelmap(int angle) {
 	// Generate a sprite map that is tank_width^2 size with a line of pixels with the angle specified, from the middle
-	int x, y;
+	int idx;
 	int rad;
 	
-	for(rad = 0; rad <= BARREL_LENGTH; rad++) {
-		// Finish generation function
+	int startx = 16;
+	int starty = 5;
+	
+	int x, y;
+	double h, cursin, curcos;
+  double sinang = sin(angle);
+	double cosang = cos(angle);
+	printf("%f %f", sinang, cosang);
+	double tol = 0.1;
+	
+	for (idx = 0; idx < TANK_WIDTH * TANK_WIDTH; idx++) {
+		x = idx % TANK_WIDTH - startx;
+		y = idx / TANK_WIDTH - starty;
+		h = sqrt((double)x*x+y*y);
+		cursin = y/h;
+		curcos = x/h;
+		//printf("x: %d y: %d h: %f cursin: %f curcos: %f \n", x, y, h, cursin, curcos);
+		if (h <= BARREL_LENGTH && 
+			  cursin <= sinang + tol && cursin >= sinang - tol &&
+		    curcos <= cosang + tol && curcos >= cosang - tol) {
+			barrelmap[idx] = BARREL_COLOR;
+		} else {
+			barrelmap[idx] = BACKGROUND_COLOR;
+		}
 	}
+	
+	print_barrelmap();
 }
 
 
