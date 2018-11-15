@@ -1,22 +1,25 @@
 #ifndef PLAYER
 #define PLAYER
 
+#include "coordinate.h"
 #include "terrain.h"
 #include "uart.h"
+
+#define MAX_FIREPOWER 10
+#define RADIUS_OF_DAMAGE 3
+#define MAX_DAMAGE 20
 
 typedef struct {
   // HP max 100
   int8_t HP;
-  // between 1 to 320
-  uint16_t x;
-  // between 1 to 240
-  uint16_t y;
+  Coordinate pos;
   //-179 to 180
   int16_t aimAngle;
 } Player;
 
-void updateHealth(Player *p, uint16_t landX, uint16_t landY);
+void updateHealth(Player *p, Coordinate land);
 void updatePosition(Player *p, int16_t newX, Terrain terrain);
 void updateAim(Player *p, int16_t newAim);
+// void fire(Player p, uint16_t firepower);
 
 #endif

@@ -11,8 +11,8 @@
 
 Player p1, p2;
 
-// a number between 1 to 100
-uint8_t firepower = 100;
+// a number between 1 to 10
+uint8_t firepower = MAX_FIREPOWER;
 bool isP1 = true;
 
 // current potentiometer
@@ -23,6 +23,8 @@ osSemaphoreId semaphore;
 osSemaphoreDef(semaphore);
 
 Terrain terrain;
+// coordinate of the ball
+Coordinate ball;
 
 void setupGame() {
   // generate terrain here
@@ -34,7 +36,7 @@ void setupGame() {
   p2.HP = 100;
   p2.aimAngle = 180;
   updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), terrain);
-  printf("Pos: %d, %d\n", p1.x, p2.x);
+  printf("Pos: %d, %d\n", p1.pos.x, p2.pos.x);
   printf("Aim: %d, %d\n", p1.aimAngle, p2.aimAngle);
 }
 
@@ -52,8 +54,8 @@ void potentiometerWorker(void const *arg) {
     while (~LPC_ADC->ADGDR & (0x01 << 31))
       ;
     potValue = (LPC_ADC->ADGDR & (0xfff << 4)) >> 4;
-    // cast firepower to 1 to 100
-    firepower = ((double)potValue) / 4096 * 100 + 1;
+    // cast firepower to 1 to MAX_FIREPOWER
+    firepower = ((double)potValue) / 4096 * MAX_FIREPOWER + 1;
     osThreadYield();
   }
 }
@@ -86,10 +88,10 @@ void joystickWorker(void const *arg) {
     }
     if (delay) {
       if (isP1) {
-        updatePosition(&p1, changePos + p1.x, terrain);
+        updatePosition(&p1, changePos + p1.pos.x, terrain);
         updateAim(&p1, changeAim + p1.aimAngle);
       } else {
-        updatePosition(&p2, changePos + p2.x, terrain);
+        updatePosition(&p2, changePos + p2.pos.x, terrain);
         updateAim(&p2, changeAim + p2.aimAngle);
       }
       osDelay(1000);
@@ -123,7 +125,7 @@ void gameWorker(void const *arg) {
   while (true) {
     // wait for semaphore
     osSemaphoreWait(semaphore, osWaitForever);
-    printf("Pos: %d, %d\n", p1.x, p2.x);
+    printf("Pos: %d, %d\n", p1.pos.x, p2.pos.x);
     printf("Aim: %d, %d\n", p1.aimAngle, p2.aimAngle);
     printf("Firepower: %d\n", firepower);
     busyWait(10000000);
@@ -147,7 +149,7 @@ osThreadDef(pushbuttonWorker, osPriorityNormal, 1, 0);
 osThreadDef(gameWorker, osPriorityHigh, 1, 0);
 // graphics thread should have a high priority as well, but has a delay so it
 // wont block the other stuff?
-osThreadDef(graphicsWorker, osPriorityNormal, 1, 0);
+// osThreadDef(graphicsWorker, osPriorityNormal, 1, 0);
 
 int main(void) {
   // Unit UART printing,
@@ -161,7 +163,7 @@ int main(void) {
   osThreadId t2 = osThreadCreate(osThread(joystickWorker), NULL);
   osThreadId t3 = osThreadCreate(osThread(pushbuttonWorker), NULL);
   osThreadId t4 = osThreadCreate(osThread(gameWorker), NULL);
-  osThreadId t5 = osThreadCreate(osThread(graphicsWorker), NULL);
+  // osThreadId t5 = osThreadCreate(osThread(graphicsWorker), NULL);
 
   // Continue that main thread forever
   while (1)
