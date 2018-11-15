@@ -1,17 +1,17 @@
 #include "terrain.h"
 
-uint32_t getIndex(Coordinate c) { return TERRAIN_WIDTH * c.y + c.x; }
+uint32_t getIndex(uint16_t x, uint16_t y) { return TERRAIN_WIDTH * y + x; }
 
 void generateTerrain(Terrain* terrain) {}
-bool collide(Terrain terrain, Coordinate c) {
-  return terrain[getIndex(c)];
+bool collide(Terrain* terrain, Coordinate c) {
+  return terrain[getIndex(c.x, c.y)];
 }
 void damage(Terrain* terrain, Coordinate c) {
   // update terrain
 }
-uint16_t closestY(Terrain terrain, Coordinate c) {
-  uint32_t index = getIndex(c);
-  uint8_t count = c.y;
+uint16_t closestGround(Terrain *terrain, uint16_t x, uint16_t oldY){	
+  uint32_t index = getIndex(x, oldY);
+  uint16_t count = oldY;
   // while ground is not there
   while (index < TERRAIN_LENGTH) {
     if (terrain[index]) return count;

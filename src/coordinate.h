@@ -4,9 +4,9 @@
 #include "uart.h"
 
 typedef struct {
-  // between 1 to 320
+  // between 0 to 319
   uint16_t x;
-  // between 1 to 240
+  // between 0 to 239
   uint16_t y;
 } Coordinate;
 
