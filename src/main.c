@@ -149,6 +149,14 @@ osThreadDef(gameWorker, osPriorityHigh, 1, 0);
 // wont block the other stuff?
 osThreadDef(graphicsWorker, osPriorityNormal, 1, 0);
 
+void test(void const *arg) {
+	while(true) {
+		printf("hello");
+		osDelay(9000);
+	}
+}
+
+osThreadDef(test, osPriorityNormal, 1, 0);
 int main(void) {
   // Unit UART printing,
   // Init kernel
@@ -156,14 +164,13 @@ int main(void) {
   printf("Starting\n");
   osKernelInitialize();
   osKernelStart();
-  semaphore = osSemaphoreCreate(osSemaphore(semaphore), 0);
-  osThreadId t1 = osThreadCreate(osThread(potentiometerWorker), NULL);
-  osThreadId t2 = osThreadCreate(osThread(joystickWorker), NULL);
-  osThreadId t3 = osThreadCreate(osThread(pushbuttonWorker), NULL);
-  osThreadId t4 = osThreadCreate(osThread(gameWorker), NULL);
-  osThreadId t5 = osThreadCreate(osThread(graphicsWorker), NULL);
-
+  //semaphore = osSemaphoreCreate(osSemaphore(semaphore), 0);
+  //osThreadId t1 = osThreadCreate(osThread(potentiometerWorker), NULL);
+  //osThreadId t2 = osThreadCreate(osThread(joystickWorker), NULL);
+  //osThreadId t3 = osThreadCreate(osThread(pushbuttonWorker), NULL);
+  //osThreadId t4 = osThreadCreate(osThread(gameWorker), NULL);
+  //osThreadId t5 = osThreadCreate(osThread(graphicsWorker), NULL);
+	osThreadCreate(osThread(test), NULL);
   // Continue that main thread forever
-  while (1)
-    ;
+  while (1);
 }

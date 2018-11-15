@@ -7,13 +7,14 @@
 #include "GLCD.h"
 #include "graphics.h"
 #include "sprites.h"
+#include "terrain.h"
 
 typedef struct {
     int px;
     int py;
     char width;
     char height;
-    uint16_t *spritemap; // Location of spritemap, which is constant
+    const uint16_t *spritemap; // Location of spritemap, which is constant
 } base_sprite;
 
 typedef struct {
@@ -31,17 +32,12 @@ typedef struct {
 } shot_graph_t;
 
 // Globals
-unsigned char terrain[TERRAIN_HEIGHT*TERRAIN_WIDTH];
 tank_graph_t *t1, *t2;
 barrel_graph_t *b1, *b2;
 shot_graph_t *shot;
 
-unsigned char getTerrainVal(int x, int y) {
-    return terrain[TERRAIN_WIDTH * y + x];
-}
-
 void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
-    // Should also take in Allison's objects to init
+  // Should also take in Allison's objects to init
 	// Init LCD module for use, with a background color and textcolor
 	GLCD_Init();
 	GLCD_Clear(cColor);
@@ -60,23 +56,8 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
     
     t1->base.px = 0;
     t1->base.py = 0;
-}
-
-void clearRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
-    // Clear a rectangle of pixels really fast
-}
-
-void updateTank(int newX, int newY, char player) {
-    tank_graph_t *tank = player == 1 ? t1 : t2;
-    
-    
-}
-
-void updateBarrel(int newX, int newY, int newAng, char player) {
-    
-}
-
-void updateShot(int newX, int newY) {
+		t1->base.width = 32;
+	  t1->base.height = 15;
 }
 
 void displayStringToLCD(int row, int column, int sz, char* str, int clear) {
@@ -94,11 +75,40 @@ void displayStringToLCD(int row, int column, int sz, char* str, int clear) {
 	GLCD_DisplayString(row, column, sz, str);
 }
 
-void displayBitmapToLCD(int col, int row, int width, int height, uint16_t* bitmap) {
+void displayBitmapToLCD(int col, int row, int width, int height, const uint16_t* bitmap) {
     GLCD_Bitmap(col, row, width, height, (unsigned char*) bitmap);
 }
 
+void clearRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
+    // Clear a rectangle of pixels really fast
+	  int i, j;
+		
+		//GLCD_SetWindow(x, y, width, height);
 
+		//wr_cmd(0x22);
+		//wr_dat_start();
+		for (i = (height-1)*width; i > -1; i -= width) {
+			for (j = 0; j < width; j++) {
+				//wr_dat_only(BACKGROUND_COLOR);
+			}
+		}
+		//wr_dat_stop();
+}
+
+void updateTank(int newX, int newY, char player) {
+    tank_graph_t *tank = player == 1 ? t1 : t2;
+    clearRect(tank->base.px, tank->base.py, tank->base.width, tank->base.height);
+    displayBitmapToLCD(newX, newY, tank->base.width, tank->base.height, tank->base.spritemap);
+	  tank->base.px = newX;
+	  tank->base.py = newY;
+}
+
+void updateBarrel(int newX, int newY, int newAng, char player) {
+    
+}
+
+void updateShot(int newX, int newY) {
+}
 
 void graphicsWorker(void const *arg) {
 	initGraphics(White, White, Black);
@@ -109,10 +119,10 @@ void graphicsWorker(void const *arg) {
 	while(true) {
 		sprintf(result, "%d", count);
 		displayStringToLCD(5, 5, 0, result, 12);
-        displayBitmapToLCD(count, count, 32, 13, tank_map);
+		
+		//updateTank(count, count, 1);
 		count++;
 		osDelay(900);
-        GLCD_Clear(White);
 	}
 }
 
