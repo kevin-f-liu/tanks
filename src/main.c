@@ -31,11 +31,11 @@ void setupGame() {
   generateTerrain(&terrain);
   p1.HP = 100;
   p1.aimAngle = 0;
-  updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), terrain);
+  updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), &terrain);
 
   p2.HP = 100;
   p2.aimAngle = 180;
-  updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), terrain);
+  updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), &terrain);
   printf("Pos: %d, %d\n", p1.pos.x, p2.pos.x);
   printf("Aim: %d, %d\n", p1.aimAngle, p2.aimAngle);
 }
@@ -88,10 +88,10 @@ void joystickWorker(void const *arg) {
     }
     if (delay) {
       if (isP1) {
-        updatePosition(&p1, changePos + p1.pos.x, terrain);
+        updatePosition(&p1, changePos + p1.pos.x, &terrain);
         updateAim(&p1, changeAim + p1.aimAngle);
       } else {
-        updatePosition(&p2, changePos + p2.pos.x, terrain);
+        updatePosition(&p2, changePos + p2.pos.x, &terrain);
         updateAim(&p2, changeAim + p2.aimAngle);
       }
       osDelay(1000);
