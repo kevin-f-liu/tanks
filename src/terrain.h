@@ -8,7 +8,7 @@
 #define TERRAIN_HEIGHT 240                               // Screen width in pixels
 #define TERRAIN_LENGTH (TERRAIN_WIDTH * TERRAIN_HEIGHT)  // length of terrain array
 
-typedef bool Terrain[TERRAIN_LENGTH];
+typedef struct { char x[TERRAIN_LENGTH]; } Terrain;
 
 void generateTerrain(Terrain *terrain);
 bool collide(Terrain *terrain, Coordinate c);
