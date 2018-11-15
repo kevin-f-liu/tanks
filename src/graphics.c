@@ -53,11 +53,13 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
     
     t1->base.spritemap = tankmap;
     t2->base.spritemap = tankmap;
+	  b1->base.spritemap = barrelmap;
+    b2->base.spritemap = barrelmap;
     
     t1->base.px = 0;
     t1->base.py = 0;
-		t1->base.width = 32;
-	  t1->base.height = 15;
+		t1->base.width = TANK_WIDTH;
+	  t1->base.height = TANK_HEIGHT;
 }
 
 void displayStringToLCD(int row, int column, int sz, char* str, int clear) {
@@ -83,16 +85,16 @@ void clearRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
     // Clear a rectangle of pixels really fast
 	  int i, j;
 		
-		//GLCD_SetWindow(x, y, width, height);
+		GLCD_SetWindow(x, y, width, height);
 
-		//wr_cmd(0x22);
-		//wr_dat_start();
+		wr_cmd(0x22);
+		wr_dat_start();
 		for (i = (height-1)*width; i > -1; i -= width) {
 			for (j = 0; j < width; j++) {
-				//wr_dat_only(BACKGROUND_COLOR);
+				wr_dat_only(BACKGROUND_COLOR);
 			}
 		}
-		//wr_dat_stop();
+		wr_dat_stop();
 }
 
 void updateTank(int newX, int newY, char player) {
@@ -104,14 +106,14 @@ void updateTank(int newX, int newY, char player) {
 }
 
 void updateBarrel(int newX, int newY, int newAng, char player) {
-    
+    // Call the update barrel function, use global barrel map
 }
 
 void updateShot(int newX, int newY) {
 }
 
 void graphicsWorker(void const *arg) {
-	initGraphics(White, White, Black);
+	initGraphics(BACKGROUND_COLOR, BACKGROUND_COLOR, Black);
 	int count = 0;
 	char result[12]; // Temp storage string
     
@@ -120,9 +122,9 @@ void graphicsWorker(void const *arg) {
 		sprintf(result, "%d", count);
 		displayStringToLCD(5, 5, 0, result, 12);
 		
-		//updateTank(count, count, 1);
+		updateTank(count, count, 1);
 		count++;
-		osDelay(900);
+		osDelay(3000);
 	}
 }
 

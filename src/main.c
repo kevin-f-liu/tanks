@@ -26,14 +26,14 @@ Terrain terrain;
 
 void setupGame() {
   // generate terrain here
-  generateTerrain(&terrain);
+  //generateTerrain(&terrain);
   p1.HP = 100;
   p1.aimAngle = 0;
-  updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), terrain);
+  //updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), terrain);
 
   p2.HP = 100;
   p2.aimAngle = 180;
-  updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), terrain);
+  //updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), terrain);
   printf("Pos: %d, %d\n", p1.x, p2.x);
   printf("Aim: %d, %d\n", p1.aimAngle, p2.aimAngle);
 }
@@ -86,10 +86,10 @@ void joystickWorker(void const *arg) {
     }
     if (delay) {
       if (isP1) {
-        updatePosition(&p1, changePos + p1.x, terrain);
+        //updatePosition(&p1, changePos + p1.x, terrain);
         updateAim(&p1, changeAim + p1.aimAngle);
       } else {
-        updatePosition(&p2, changePos + p2.x, terrain);
+        //updatePosition(&p2, changePos + p2.x, terrain);
         updateAim(&p2, changeAim + p2.aimAngle);
       }
       osDelay(1000);
@@ -149,14 +149,6 @@ osThreadDef(gameWorker, osPriorityHigh, 1, 0);
 // wont block the other stuff?
 osThreadDef(graphicsWorker, osPriorityNormal, 1, 0);
 
-void test(void const *arg) {
-	while(true) {
-		printf("hello");
-		osDelay(9000);
-	}
-}
-
-osThreadDef(test, osPriorityNormal, 1, 0);
 int main(void) {
   // Unit UART printing,
   // Init kernel
@@ -164,13 +156,12 @@ int main(void) {
   printf("Starting\n");
   osKernelInitialize();
   osKernelStart();
-  //semaphore = osSemaphoreCreate(osSemaphore(semaphore), 0);
-  //osThreadId t1 = osThreadCreate(osThread(potentiometerWorker), NULL);
-  //osThreadId t2 = osThreadCreate(osThread(joystickWorker), NULL);
-  //osThreadId t3 = osThreadCreate(osThread(pushbuttonWorker), NULL);
-  //osThreadId t4 = osThreadCreate(osThread(gameWorker), NULL);
-  //osThreadId t5 = osThreadCreate(osThread(graphicsWorker), NULL);
-	osThreadCreate(osThread(test), NULL);
+  semaphore = osSemaphoreCreate(osSemaphore(semaphore), 0);
+  osThreadId t1 = osThreadCreate(osThread(potentiometerWorker), NULL);
+  osThreadId t2 = osThreadCreate(osThread(joystickWorker), NULL);
+  osThreadId t3 = osThreadCreate(osThread(pushbuttonWorker), NULL);
+  osThreadId t4 = osThreadCreate(osThread(gameWorker), NULL);
+  osThreadId t5 = osThreadCreate(osThread(graphicsWorker), NULL);
   // Continue that main thread forever
   while (1);
 }

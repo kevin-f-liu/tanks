@@ -9,7 +9,7 @@
 #include "uart.h"
 
 // Define colors used
-#define BACKGROUND_COLOR 0x07FF
+#define BACKGROUND_COLOR 0xFFFF
 #define TERRAIN_COLOR 0x0000
 #define TEXT_COLOR 0x0000
 
