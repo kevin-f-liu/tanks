@@ -24,6 +24,7 @@ osSemaphoreDef(semaphore);
 
 Terrain terrain;
 // coordinate of the ball
+// ball will update as player pos is updated (hide the ball)
 Coordinate ball;
 
 void setupGame() {
@@ -32,6 +33,7 @@ void setupGame() {
   p1.HP = 100;
   p1.aimAngle = 0;
   updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), &terrain);
+  ball = p1.pos;
 
   p2.HP = 100;
   p2.aimAngle = 180;
@@ -88,11 +90,13 @@ void joystickWorker(void const *arg) {
     }
     if (delay) {
       if (isP1) {
-        updatePosition(&p1, changePos + p1.pos.x, &terrain);
+        updatePosition(&p1, changePos, &terrain);
         updateAim(&p1, changeAim + p1.aimAngle);
+        ball = p1.pos;
       } else {
-        updatePosition(&p2, changePos + p2.pos.x, &terrain);
+        updatePosition(&p2, changePos, &terrain);
         updateAim(&p2, changeAim + p2.aimAngle);
+        ball = p2.pos;
       }
       osDelay(1000);
     }
@@ -102,8 +106,7 @@ void joystickWorker(void const *arg) {
 void pushbuttonWorker(void const *arg) {
   bool lastButtonState = false;
   while (true) {
-    if ((~LPC_GPIO2->FIOPIN & (0x01 << 10)) != lastButtonState &&
-        !lastButtonState) {
+    if ((~LPC_GPIO2->FIOPIN & (0x01 << 10)) != lastButtonState && !lastButtonState) {
       lastButtonState = true;
       if (newGame) {
         // reset game
@@ -128,8 +131,8 @@ void gameWorker(void const *arg) {
     printf("Pos: %d, %d\n", p1.pos.x, p2.pos.x);
     printf("Aim: %d, %d\n", p1.aimAngle, p2.aimAngle);
     printf("Firepower: %d\n", firepower);
+    // TODO: replace busy wait with move ball based on aim angle and firepower
     busyWait(10000000);
-    // Use current values for projectile and stuff
     // check if game ends
     if (p1.HP <= 0 || p2.HP <= 0) {
       newGame = true;
