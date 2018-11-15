@@ -106,7 +106,8 @@ void joystickWorker(void const *arg) {
 void pushbuttonWorker(void const *arg) {
   bool lastButtonState = false;
   while (true) {
-    if ((~LPC_GPIO2->FIOPIN & (0x01 << 10)) != lastButtonState && !lastButtonState) {
+    if ((~LPC_GPIO2->FIOPIN & (0x01 << 10)) != lastButtonState &&
+        !lastButtonState) {
       lastButtonState = true;
       if (newGame) {
         // reset game
@@ -133,6 +134,8 @@ void gameWorker(void const *arg) {
     printf("Firepower: %d\n", firepower);
     // TODO: replace busy wait with move ball based on aim angle and firepower
     busyWait(10000000);
+    updateHealth(&p1, &ball);
+    updateHealth(&p2, &ball);
     // check if game ends
     if (p1.HP <= 0 || p2.HP <= 0) {
       newGame = true;
