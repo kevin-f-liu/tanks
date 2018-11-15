@@ -29,15 +29,15 @@ Coordinate ball;
 
 void setupGame() {
   // generate terrain here
-  generateTerrain(&terrain);
+  // generateTerrain(&terrain);
   p1.HP = 100;
   p1.aimAngle = 0;
-  updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), &terrain);
+  //updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), &terrain);
   ball = p1.pos;
 
   p2.HP = 100;
   p2.aimAngle = 180;
-  updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), &terrain);
+  //updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), &terrain);
   printf("Pos: %d, %d\n", p1.pos.x, p2.pos.x);
   printf("Aim: %d, %d\n", p1.aimAngle, p2.aimAngle);
 }
@@ -90,11 +90,11 @@ void joystickWorker(void const *arg) {
     }
     if (delay) {
       if (isP1) {
-        updatePosition(&p1, changePos, &terrain);
+        //updatePosition(&p1, changePos, &terrain);
         updateAim(&p1, changeAim + p1.aimAngle);
         ball = p1.pos;
       } else {
-        updatePosition(&p2, changePos, &terrain);
+        //updatePosition(&p2, changePos, &terrain);
         updateAim(&p2, changeAim + p2.aimAngle);
         ball = p2.pos;
       }
