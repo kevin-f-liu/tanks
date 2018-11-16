@@ -17,7 +17,7 @@ bool isP1 = true;
 
 // current potentiometer
 uint16_t potValue;
-bool newGame = true;
+bool newGame = false;
 
 osSemaphoreId semaphore;
 osSemaphoreDef(semaphore);
@@ -29,17 +29,14 @@ Coordinate ball;
 
 void setupGame() {
   // generate terrain here
-  // generateTerrain(&terrain);
-  p1.HP = 100;
-  p1.aimAngle = 0;
-  //updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), &terrain);
+  generateTerrain(&terrain);
+  setupPlayer(&p1);
+  updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), &terrain);
   ball = p1.pos;
 
-  p2.HP = 100;
-  p2.aimAngle = 180;
-  //updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), &terrain);
-  printf("Pos: %d, %d\n", p1.pos.x, p2.pos.x);
-  printf("Aim: %d, %d\n", p1.aimAngle, p2.aimAngle);
+  setupPlayer(&p2);
+  updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), &terrain);
+  printf("Pos: (%d,%d), (%d,%d)\n", p1.pos.x, p1.pos.y, p2.pos.x, p2.pos.y);
 }
 
 void potentiometerWorker(void const *arg) {
@@ -90,11 +87,11 @@ void joystickWorker(void const *arg) {
     }
     if (delay) {
       if (isP1) {
-        //updatePosition(&p1, changePos, &terrain);
+        updatePosition(&p1, changePos, &terrain);
         updateAim(&p1, changeAim + p1.aimAngle);
         ball = p1.pos;
       } else {
-        //updatePosition(&p2, changePos, &terrain);
+        updatePosition(&p2, changePos, &terrain);
         updateAim(&p2, changeAim + p2.aimAngle);
         ball = p2.pos;
       }
@@ -111,6 +108,7 @@ void pushbuttonWorker(void const *arg) {
       lastButtonState = true;
       if (newGame) {
         // reset game
+        // maybe use mutex
         setupGame();
         newGame = false;
       } else {
@@ -129,19 +127,31 @@ void gameWorker(void const *arg) {
   while (true) {
     // wait for semaphore
     osSemaphoreWait(semaphore, osWaitForever);
-    printf("Pos: %d, %d\n", p1.pos.x, p2.pos.x);
-    printf("Aim: %d, %d\n", p1.aimAngle, p2.aimAngle);
+    // maybe use mutex instead of priorityHigh thread
     printf("Firepower: %d\n", firepower);
     // TODO: replace busy wait with move ball based on aim angle and firepower
     busyWait(10000000);
+    damage(&terrain, &ball);
+
     updateHealth(&p1, &ball);
+    updatePosition(&p1, 0, &terrain);
+
     updateHealth(&p2, &ball);
+    updatePosition(&p2, 0, &terrain);
+
+    printPlayer(&p1);
+    printPlayer(&p2);
+
+    printTerrain(&terrain);
     // check if game ends
     if (p1.HP <= 0 || p2.HP <= 0) {
+      printf("Game Ended\n");
       newGame = true;
     } else {
       // switch turn
       isP1 = !isP1;
+      ball = isP1 ? p1.pos : p2.pos;
+      printf("Turn ended\n");
     }
     osThreadYield();
   }
@@ -164,13 +174,13 @@ int main(void) {
   printf("Starting\n");
   osKernelInitialize();
   osKernelStart();
+  setupGame();
   semaphore = osSemaphoreCreate(osSemaphore(semaphore), 0);
   osThreadId t1 = osThreadCreate(osThread(potentiometerWorker), NULL);
   osThreadId t2 = osThreadCreate(osThread(joystickWorker), NULL);
   osThreadId t3 = osThreadCreate(osThread(pushbuttonWorker), NULL);
   osThreadId t4 = osThreadCreate(osThread(gameWorker), NULL);
   // osThreadId t5 = osThreadCreate(osThread(graphicsWorker), NULL);
-
   // Continue that main thread forever
   while (1)
     ;
