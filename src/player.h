@@ -5,7 +5,7 @@
 #include "terrain.h"
 #include "uart.h"
 
-#define MAX_FIREPOWER 10
+#define MAX_FIREPOWER 5
 #define RADIUS_OF_DAMAGE 3
 #define MAX_DAMAGE 20
 
@@ -17,7 +17,7 @@ typedef struct {
   int16_t aimAngle;
 } Player;
 
-void setupPlayer(Player *p);
+void setupPlayer(Player *p, bool isP1);
 void updateHealth(Player *p, Coordinate *land);
 void updatePosition(Player *p, int16_t newX, Terrain *terrain);
 void updateAim(Player *p, int16_t newAim);

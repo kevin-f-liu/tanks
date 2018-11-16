@@ -7,18 +7,20 @@
 #include "GLCD.h"
 #include "graphics.h"
 #include "sprites.h"
+#include "terrain.h"
 
 typedef struct {
     int px;
     int py;
     char width;
     char height;
-    uint16_t *spritemap; // Location of spritemap, which is constant
+    const uint16_t *spritemap; // Location of spritemap, which is constant
 } base_sprite;
 
 typedef struct {
     base_sprite base;
     int angle;
+	  int barrelOffset;
 } tank_graph_t;
 
 typedef struct {
@@ -31,22 +33,17 @@ typedef struct {
 } shot_graph_t;
 
 // Globals
-unsigned char terrain[TERRAIN_HEIGHT*TERRAIN_WIDTH];
 tank_graph_t *t1, *t2;
 barrel_graph_t *b1, *b2;
 shot_graph_t *shot;
 
-unsigned char getTerrainVal(int x, int y) {
-    return terrain[TERRAIN_WIDTH * y + x];
-}
-
 void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
     // Should also take in Allison's objects to init
-	// Init LCD module for use, with a background color and textcolor
-	GLCD_Init();
-	GLCD_Clear(cColor);
-	GLCD_SetTextColor(tColor);
-	GLCD_SetBackColor(bColor);
+	  // Init LCD module for use, with a background color and textcolor
+	  GLCD_Init();
+	  GLCD_Clear(cColor);
+	  GLCD_SetTextColor(tColor);
+	  GLCD_SetBackColor(bColor);
     
     // Init all sprites and locations
     t1 = malloc(sizeof(tank_graph_t));
@@ -55,28 +52,29 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
     b2 = malloc(sizeof(barrel_graph_t));
     shot = malloc(sizeof(shot_graph_t));
     
+		initBarrelmap(1);
+	
     t1->base.spritemap = tankmap;
     t2->base.spritemap = tankmap;
+	  b1->base.spritemap = barrelmap;
+    b2->base.spritemap = barrelmap;
+	  shot->base.spritemap = shotmap;
     
     t1->base.px = 0;
-    t1->base.py = 0;
-}
-
-void clearRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
-    // Clear a rectangle of pixels really fast
-}
-
-void updateTank(int newX, int newY, char player) {
-    tank_graph_t *tank = player == 1 ? t1 : t2;
-    
-    
-}
-
-void updateBarrel(int newX, int newY, int newAng, char player) {
-    
-}
-
-void updateShot(int newX, int newY) {
+    t1->base.py = TANK_WIDTH - TANK_HEIGHT;
+		t1->base.width = TANK_WIDTH;
+	  t1->base.height = TANK_HEIGHT;
+		t1->barrelOffset = TANK_WIDTH - TANK_HEIGHT;
+		
+		b1->base.px = 0;
+		b1->base.py = 0;
+		b1->base.width = TANK_WIDTH;
+		b1->base.height = TANK_WIDTH;
+		
+		shot->base.px = 0;
+		shot->base.py = 0;
+		shot->base.width = SHOT_WIDTH;
+		shot->base.height = SHOT_WIDTH;
 }
 
 void displayStringToLCD(int row, int column, int sz, char* str, int clear) {
@@ -94,25 +92,66 @@ void displayStringToLCD(int row, int column, int sz, char* str, int clear) {
 	GLCD_DisplayString(row, column, sz, str);
 }
 
-void displayBitmapToLCD(int col, int row, int width, int height, uint16_t* bitmap) {
+void displayBitmapToLCD(int col, int row, int width, int height, const uint16_t* bitmap) {
     GLCD_Bitmap(col, row, width, height, (unsigned char*) bitmap);
 }
 
+void clearRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
+    // Clear a rectangle of pixels really fast
+	  int i, j;
+		
+		GLCD_SetWindow(x, y, width, height);
 
+		wr_cmd(0x22);
+		wr_dat_start();
+		for (i = (height-1)*width; i > -1; i -= width) {
+			for (j = 0; j < width; j++) {
+				wr_dat_only(BACKGROUND_COLOR);
+			}
+		}
+		wr_dat_stop();
+}
+
+void updateTank(int newX, int newY, int newAng, char player) {
+    // x and y are the top left corner of a widthXwidth square. Same as barrel
+    tank_graph_t *tank = player == 1 ? t1 : t2;
+	  barrel_graph_t *barrel = player == 1 ? b1 : b2;
+		
+	  // Update barrel first
+	  if (newAng <= 180 && newAng >= -180) {
+			  loadBarrelmap(newAng);			  
+		}
+		
+	  clearRect(barrel->base.px, barrel->base.py, barrel->base.width, barrel->base.height);
+		
+		// Barrel update should go first to draw tank on top of barrel
+		displayBitmapToLCD(newX, newY, barrel->base.width, barrel->base.height, barrel->base.spritemap);
+    displayBitmapToLCD(newX, newY + tank->barrelOffset, tank->base.width, tank->base.height, tank->base.spritemap);
+		barrel->base.px = newX;
+	  barrel->base.py = newY;
+	  tank->base.px = newX;
+	  tank->base.py = newY + tank->barrelOffset;
+}
+
+void updateShot(int newX, int newY) {
+	  clearRect(shot->base.px, shot->base.py, shot->base.width, shot->base.height);
+	  displayBitmapToLCD(newX, newY, shot->base.width, shot->base.height, shot->base.spritemap);
+	  shot->base.px = newX;
+	  shot->base.py = newY;
+}
 
 void graphicsWorker(void const *arg) {
-	initGraphics(White, White, Black);
+	initGraphics(BACKGROUND_COLOR, BACKGROUND_COLOR, Black);
 	int count = 0;
 	char result[12]; // Temp storage string
-    
-    
+  updateTank(100, 100, 60, 1);
 	while(true) {
 		sprintf(result, "%d", count);
 		displayStringToLCD(5, 5, 0, result, 12);
-        displayBitmapToLCD(count, count, 32, 13, tank_map);
+		updateTank(count + 100, 100, count % 180, 1);
+		updateShot(count, count);
 		count++;
-		osDelay(900);
-        GLCD_Clear(White);
+		osDelay(30);
 	}
 }
 

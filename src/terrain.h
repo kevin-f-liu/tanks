@@ -1,5 +1,5 @@
-#ifndef TERRAIN
-#define TERRAIN
+#ifndef TERRAIN_H
+#define TERRAIN_H
 #include <stdbool.h>
 #include "coordinate.h"
 #include "uart.h"

@@ -6,9 +6,25 @@
 #include "GLCD.h"
 #include "graphics.h"
 #include "sprites.h"
+#include "math.h"
+#include "helper.h"
+
+float fastInvsqrt(float number) {
+	long i;
+	float x2, y;
+	const float threehalfs = 1.5F;
+	x2 = number * 0.5F;
+	y  = number;
+	i  = * ( long * ) &y;      
+	i  = 0x5f3759df - ( i >> 1 );
+	y  = * ( float * ) &i;
+	y  = y * ( threehalfs - ( x2 * y * y ) );   // 1st iteration
+
+	return y;
+}
 
  const uint16_t tankmap[] = {
-    0xffff, 0xffde, 0xffff, 0xf79e, 0xffff, 0xffdf, 0xffff, 0x0000, 0x0000, 0x0041, 0x0000, 0x0021, 0x0021, 0x0000, 0x0020, 0x0000, 
+  0xffff, 0xffde, 0xffff, 0xf79e, 0xffff, 0xffdf, 0xffff, 0x0000, 0x0000, 0x0041, 0x0000, 0x0021, 0x0021, 0x0000, 0x0020, 0x0000, 
 	0x0000, 0x0861, 0x0000, 0x0000, 0x0021, 0x0000, 0x0001, 0x0000, 0x0001, 0x0020, 0xf79d, 0xffff, 0xffff, 0xffff, 0xffff, 0xf79e, 
 	0xffff, 0xf7be, 0xffff, 0xffff, 0xef3c, 0x0820, 0x18c3, 0x4a28, 0x4a49, 0x4208, 0x0800, 0x0841, 0x41e7, 0x1062, 0x0000, 0x4a48, 
 	0x4a28, 0x4207, 0x0820, 0x1061, 0x41e7, 0x1062, 0x0000, 0x4a49, 0x41c7, 0x0800, 0x20c2, 0xd679, 0xffff, 0xf79e, 0xe71c, 0xffff, 
@@ -35,3 +51,59 @@
 	0xffff, 0xffff, 0xe73c, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xce38, 0x3104, 0x0800, 0x1000, 
 	0x2061, 0xff5c, 0xffff, 0xffff, 0xffff, 0xf7ff, 0xef9e, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 
 };
+ 
+uint16_t barrelmap[TANK_WIDTH*TANK_WIDTH];
+
+void printBarrelmap(void) {
+	for (int idx = 0; idx < TANK_WIDTH * TANK_WIDTH; idx++) {
+		printf("%x ", barrelmap[idx]);
+		if (!(idx % TANK_WIDTH)) printf("\n");
+	}
+}
+
+void initBarrelmap(char player) {
+	loadBarrelmap(player == 1 ? 0 : 180);
+}
+
+void loadBarrelmap(int a) {
+	// Generate a sprite map that is tank_width^2 size with a line of pixels with the angle specified, from the middle
+	
+	double angle = toRad(a);
+	int idx;
+	
+	int startx = TANK_WIDTH / 2;
+	int starty = TANK_HEIGHT;
+	
+	int x, y, h2;
+	double cursin, curcos;
+  double sinang = sin(angle);
+	double cosang = cos(angle);
+	double tol = 0.1;
+	
+	for (idx = 0; idx < TANK_WIDTH * TANK_WIDTH; idx++) {
+		x = idx % TANK_WIDTH - startx;
+		y = idx / TANK_WIDTH - starty;
+		h2 = x*x+y*y;
+		cursin = y*fastInvsqrt(h2);
+		curcos = x*fastInvsqrt(h2);
+		//printf("x: %d y: %d h2: %f cursin: %f curcos: %f \n", x, y, h2, cursin, curcos);
+		if (h2 <= BARREL_LENGTH2 && 
+			  cursin <= sinang + tol && cursin >= sinang - tol &&
+		    curcos <= cosang + tol && curcos >= cosang - tol) {
+			barrelmap[idx] = BARREL_COLOR;
+		} else {
+			barrelmap[idx] = BACKGROUND_COLOR;
+		}
+	}
+}
+
+const uint16_t shotmap[] = {
+	0x0000, 0x0000, 0x0000, 0x0000,
+	0x0000, 0x0000, 0x0000, 0x0000,
+	0x0000, 0x0000, 0x0000, 0x0000,
+	0x0000, 0x0000, 0x0000, 0x0000,
+};
+
+
+
+

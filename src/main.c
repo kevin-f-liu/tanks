@@ -14,7 +14,6 @@ Player p1, p2;
 // a number between 1 to 10
 uint8_t firepower = MAX_FIREPOWER;
 bool isP1 = true;
-
 bool newGame = false;
 
 osSemaphoreId semaphore;
@@ -28,11 +27,11 @@ Coordinate ball;
 void setupGame() {
   // generate terrain here
   generateTerrain(&terrain);
-  setupPlayer(&p1);
+  setupPlayer(&p1, true);
   updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), &terrain);
   ball = p1.pos;
 
-  setupPlayer(&p2);
+  setupPlayer(&p2, false);
   updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), &terrain);
   printf("Pos: (%d,%d), (%d,%d)\n", p1.pos.x, p1.pos.y, p2.pos.x, p2.pos.y);
 }
@@ -70,11 +69,11 @@ void joystickWorker(void const *arg) {
         break;
         // down is counter clockwise (25)
       case 0x00800000:
-        changeAim = changeAim - 5;
+        changeAim--;
         break;
         // up is clockwise (23)
       case 0x02000000:
-        changeAim = changeAim + 5;
+        changeAim++;
         break;
       case 0x04000000:
         changePos--;
@@ -126,14 +125,15 @@ void gameWorker(void const *arg) {
     // wait for semaphore
     osSemaphoreWait(semaphore, osWaitForever);
     // maybe use mutex instead of priorityHigh thread
-    printf("Firepower: %d\n", firepower);
-    // TODO: replace busy wait with move ball based on aim angle and firepower
-    busyWait(10000000);
-    damage(&terrain, &ball);
-
-    updateStatus(&p1, &terrain, &ball);
-    updateStatus(&p2, &terrain, &ball);
-
+    printf("Firepower: %d\n", firepower);		
+    bool collided = fire(isP1 ? &p1: &p2, &ball, &terrain, firepower);
+		if (collided){
+			// update terrain
+			damage(&terrain, &ball);
+			// update health and position
+			updateStatus(&p1, &terrain, &ball);
+			updateStatus(&p2, &terrain, &ball);
+		}
     printTerrain(&terrain);
     // check if game ends
     if (p1.HP <= 0 || p2.HP <= 0) {
@@ -143,7 +143,6 @@ void gameWorker(void const *arg) {
       // switch turn
       isP1 = !isP1;
       ball = isP1 ? p1.pos : p2.pos;
-      printf("Ball: (%d,%d)\n", ball.x, ball.y);
       printf("Turn ended\n");
     }
     osThreadYield();
@@ -175,6 +174,5 @@ int main(void) {
   osThreadId t4 = osThreadCreate(osThread(gameWorker), NULL);
   // osThreadId t5 = osThreadCreate(osThread(graphicsWorker), NULL);
   // Continue that main thread forever
-  while (1)
-    ;
+  while (1);
 }

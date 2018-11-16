@@ -56,4 +56,11 @@ extern void GLCD_ScrollVertical (unsigned int dy);
 extern void GLCD_WrCmd          (unsigned char cmd);
 extern void GLCD_WrReg          (unsigned char reg, unsigned short val); 
 
+// Exposing internal functions for faster graphics code.
+void GLCD_SetWindow (unsigned int x, unsigned int y, unsigned int w, unsigned int h);
+void wr_cmd (unsigned char cmd);
+void wr_dat_start (void);
+void wr_dat_stop (void);
+void wr_dat_only (unsigned short dat);
+
 #endif /* _GLCD_H */

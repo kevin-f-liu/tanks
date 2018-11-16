@@ -152,7 +152,7 @@ static __inline unsigned char spi_tran (unsigned char byte) {
 *   Return:                                                                    *
 *******************************************************************************/
 
-static __inline void wr_cmd (unsigned char cmd) {
+void wr_cmd (unsigned char cmd) {
   LCD_CS(0);
   spi_tran(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
   spi_tran(0);
@@ -182,7 +182,7 @@ static __inline void wr_dat (unsigned short dat) {
 *   Return:                                                                    *
 *******************************************************************************/
 
-static __inline void wr_dat_start (void) {
+void wr_dat_start (void) {
   LCD_CS(0);
   spi_tran(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
 }
@@ -194,7 +194,7 @@ static __inline void wr_dat_start (void) {
 *   Return:                                                                    *
 *******************************************************************************/
 
-static __inline void wr_dat_stop (void) {
+void wr_dat_stop (void) {
 
   LCD_CS(1);
 }
@@ -206,7 +206,7 @@ static __inline void wr_dat_stop (void) {
 *   Return:                                                                    *
 *******************************************************************************/
 
-static __inline void wr_dat_only (unsigned short dat) {
+void wr_dat_only (unsigned short dat) {
 
   spi_tran((dat >>   8));                     /* Write D8..D15                */
   spi_tran((dat & 0xFF));                     /* Write D0..D7                 */

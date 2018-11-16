@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 void busyWait(uint32_t ticks) {
   for (int i = 0; i < ticks; i++)
@@ -20,5 +21,9 @@ int16_t processValue(int16_t val, int16_t upperbound, int16_t lowerbound) {
 }
 
 double dist(Coordinate *c1, Coordinate *c2) {
-  return sqrt((c1->x - c2->x) ^ 2 + (c1->y - c2->y) ^ 2);
+  return sqrt((c1->x - c2->x) * (c1->x - c2->x) + (c1->y - c2->y) * (c1->y - c2->y));
+}
+
+inline double toRad(int angle) {
+	return angle * M_PI / 180;
 }

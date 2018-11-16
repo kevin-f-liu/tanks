@@ -45,7 +45,17 @@ void damage(Terrain* terrain, Coordinate* c) {
 uint16_t closestGround(Terrain* terrain, uint16_t x, uint16_t oldY) {
   uint32_t index = getIndex(x, oldY);
   uint16_t count = oldY;
-  // while ground is not there
+  // hit wall, go up
+	if (terrain->x[index]){
+		while (index > 0) {
+			if (!terrain->x[index]) return count;
+			count--;
+			index -= TERRAIN_WIDTH;
+		}
+		return 0;
+	}
+	
+	// middle of air, go down
   while (index < TERRAIN_LENGTH) {
     if (terrain->x[index]) return count - 1;
     count++;
