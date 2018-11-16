@@ -1,10 +1,10 @@
 #include "player.h"
-#include "helper.h"
 #include <stdio.h>
+#include "helper.h"
 
-void setupPlayer(Player *p){
-	p->HP = 100;
-	p->pos.y = 0;
+void setupPlayer(Player *p) {
+  p->HP = 100;
+  p->pos.y = 0;
   p->aimAngle = 0;
 }
 
@@ -25,9 +25,15 @@ void updateAim(Player *p, int16_t newAim) {
   p->aimAngle = processValue(newAim, 180, 0);
 }
 
-void printPlayer(Player *p){
-		printf("\n");
-    printf("HP: %d\n", p->HP);
-    printf("Pos: (%d,%d)\n", p->pos.x, p->pos.y);
-    printf("Aim: %d\n", p->aimAngle);
+void printPlayer(Player *p) {
+  printf("\n");
+  printf("HP: %d\n", p->HP);
+  printf("Pos: (%d,%d)\n", p->pos.x, p->pos.y);
+  printf("Aim: %d\n", p->aimAngle);
+}
+
+void updateStatus(Player *p, Terrain *terrain, Coordinate *ball) {
+  updateHealth(p, ball);
+  updatePosition(p, 0, terrain);
+  printPlayer(p);
 }

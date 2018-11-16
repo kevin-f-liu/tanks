@@ -15,8 +15,6 @@ Player p1, p2;
 uint8_t firepower = MAX_FIREPOWER;
 bool isP1 = true;
 
-// current potentiometer
-uint16_t potValue;
 bool newGame = false;
 
 osSemaphoreId semaphore;
@@ -52,7 +50,7 @@ void potentiometerWorker(void const *arg) {
     LPC_ADC->ADCR |= (0x01 << 24);
     while (~LPC_ADC->ADGDR & (0x01 << 31))
       ;
-    potValue = (LPC_ADC->ADGDR & (0xfff << 4)) >> 4;
+    uint16_t potValue = (LPC_ADC->ADGDR & (0xfff << 4)) >> 4;
     // cast firepower to 1 to MAX_FIREPOWER
     firepower = ((double)potValue) / 4096 * MAX_FIREPOWER + 1;
     osThreadYield();
@@ -133,14 +131,8 @@ void gameWorker(void const *arg) {
     busyWait(10000000);
     damage(&terrain, &ball);
 
-    updateHealth(&p1, &ball);
-    updatePosition(&p1, 0, &terrain);
-
-    updateHealth(&p2, &ball);
-    updatePosition(&p2, 0, &terrain);
-
-    printPlayer(&p1);
-    printPlayer(&p2);
+    updateStatus(&p1, &terrain, &ball);
+    updateStatus(&p2, &terrain, &ball);
 
     printTerrain(&terrain);
     // check if game ends
@@ -151,6 +143,7 @@ void gameWorker(void const *arg) {
       // switch turn
       isP1 = !isP1;
       ball = isP1 ? p1.pos : p2.pos;
+      printf("Ball: (%d,%d)\n", ball.x, ball.y);
       printf("Turn ended\n");
     }
     osThreadYield();

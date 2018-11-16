@@ -22,6 +22,7 @@ void updateHealth(Player *p, Coordinate *land);
 void updatePosition(Player *p, int16_t newX, Terrain *terrain);
 void updateAim(Player *p, int16_t newAim);
 void printPlayer(Player *p);
+void updateStatus(Player *p, Terrain *terrain, Coordinate *ball);
 // void fire(Player p, uint16_t firepower);
 
 #endif
