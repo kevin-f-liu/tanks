@@ -23,6 +23,7 @@ void updatePosition(Player *p, int16_t newX, Terrain *terrain);
 void updateAim(Player *p, int16_t newAim);
 void printPlayer(Player *p);
 void updateStatus(Player *p, Terrain *terrain, Coordinate *ball);
-// void fire(Player p, uint16_t firepower);
+// return true at collison, false if out of range
+bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower);
 
 #endif

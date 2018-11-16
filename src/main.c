@@ -70,11 +70,11 @@ void joystickWorker(void const *arg) {
         break;
         // down is counter clockwise (25)
       case 0x00800000:
-        changeAim--;
+        changeAim = changeAim - 5;
         break;
         // up is clockwise (23)
       case 0x02000000:
-        changeAim++;
+        changeAim = changeAim + 5;
         break;
       case 0x04000000:
         changePos--;
