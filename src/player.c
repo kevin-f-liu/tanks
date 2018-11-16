@@ -1,5 +1,12 @@
 #include "player.h"
 #include "helper.h"
+#include <stdio.h>
+
+void setupPlayer(Player *p){
+	p->HP = 100;
+	p->pos.y = 0;
+  p->aimAngle = 0;
+}
 
 void updateHealth(Player *p, Coordinate *land) {
   double d = dist(&p->pos, land);
@@ -16,4 +23,11 @@ void updatePosition(Player *p, int16_t dx, Terrain *terrain) {
 
 void updateAim(Player *p, int16_t newAim) {
   p->aimAngle = processValue(newAim, 180, 0);
+}
+
+void printPlayer(Player *p){
+		printf("\n");
+    printf("HP: %d\n", p->HP);
+    printf("Pos: (%d,%d)\n", p->pos.x, p->pos.y);
+    printf("Aim: %d\n", p->aimAngle);
 }
