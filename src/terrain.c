@@ -9,7 +9,7 @@ void generateTerrain(Terrain* terrain) {
   for (int i = 0; i < TERRAIN_LENGTH; i++) {
     terrain->x[i] = false;
   }
-  uint16_t row = 2 / 3 * TERRAIN_HEIGHT;
+  uint16_t row = 2 * TERRAIN_HEIGHT / 3;
   for (int i = 0; i < TERRAIN_WIDTH; i++) {
     // randomly generated terrain, no idea if this works
     row += random(-1, 1);
