@@ -5,14 +5,14 @@
 #include <math.h>
 #include <stdio.h>
 
-void busyWait() {
-  for (int i = 0; i < 50000000; i++)
+void busyWait(uint32_t ticks) {
+  for (int i = 0; i < ticks; i++)
     ;
 	printf("end wait\n");
 }
 
-uint16_t random(uint16_t lower, uint16_t upper) {
-  uint16_t x = rand() % (upper - lower + 1) + lower;
+int32_t random(int32_t lower, int32_t upper) {
+  int32_t x = rand() % (upper - lower + 1) + lower;
   return x;
 }
 

@@ -56,6 +56,8 @@ bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower) {
       passPeak = true;
     }
     dy--;
+		// leave time for graphics to update
+		busyWait(10000);
   }
   return true;
 }
