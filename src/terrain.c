@@ -14,7 +14,10 @@ void generateTerrain(Terrain* terrain) {
     // randomly generated terrain, no idea if this works
     row += random(-1, 1);
     // prevent row 0 to be populated
-    if (row == 0) row = 1;
+    if (row == 0)
+      row = 1;
+    else if (row > TERRAIN_HEIGHT)
+      row = TERRAIN_HEIGHT;
     for (int j = row; j < TERRAIN_HEIGHT; j++) {
       terrain->x[getIndex(i, j)] = true;
     }
