@@ -15,5 +15,5 @@ int16_t processValue(int16_t val, int16_t upperbound, int16_t lowerbound);
 double dist(Coordinate *c1, Coordinate *c2);
 double toRad(int angle);
 float fastInvsqrt(float number);
-
+bool isEdge(Coordinate c, uint16_t width, uint16_t height);
 #endif

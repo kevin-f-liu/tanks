@@ -22,6 +22,10 @@ int16_t processValue(int16_t val, int16_t upperbound, int16_t lowerbound) {
   return val;
 }
 
+bool isEdge(Coordinate c, uint16_t width, uint16_t height) {
+	return c.x == 0 || c.y == 0 || c.x == width-1 || c.y == height-1;
+}
+
 float fastInvsqrt(float number) {
 	long i;
 	float x2, y;

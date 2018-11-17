@@ -20,7 +20,6 @@ void generateTerrain(Terrain* terrain) {
   uint16_t row = 2 * TERRAIN_HEIGHT / 3;
 	int8_t prevRand = 0, curRand = 0;
   for (int i = 0; i < TERRAIN_WIDTH; i++) {
-    // randomly generated terrain, no idea if this works
 		curRand = random(-1, 1);
 		if (curRand && (curRand == -prevRand)) {
 			curRand = 0;

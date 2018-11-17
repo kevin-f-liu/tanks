@@ -9,6 +9,7 @@
 #include "sprites.h"
 #include "terrain.h"
 #include "coordinate.h"
+#include "helper.h"
 
 typedef struct {
     int px;
@@ -181,9 +182,19 @@ void updateShot(int newX, int newY) {
 	  shot->base.py = newY;
 }
 
-uint8_t classifyTerrain(Terrain *t, Coordinate c) {
-	// Get the classification of a terrain coordinate, as in peak/slope etc
-	
+const uint16_t* getTerrainMap(Terrain *t, Coordinate c) {
+	// Get the classification of a terrain coordinate, as in peak/slope etc and return a pointer to its map
+	if (isEdge(c, TERRAIN_WIDTH, TERRAIN_HEIGHT)) return terrainFull;
+	if (t->x[getIndex(c.x, c.y+1)] && !t->x[getIndex(c.x, c.y-1)]) {
+		// Bottom filled
+		if (t->x[getIndex(c.x+1, c.y)] && !t->x[getIndex(c.x-1, c.y)]) {
+			return terrainRSlope;
+		} 
+		if (t->x[getIndex(c.x-1, c.y)] && !t->x[getIndex(c.x+1, c.y)]) {
+			return terrainLSlope;
+		}
+	}
+	return terrainFull;
 }
 
 void drawTerrain(Terrain *t) {
@@ -196,7 +207,7 @@ void drawTerrain(Terrain *t) {
 		if (t->x[i]) {
 			Coordinate c = getCoord(i);
 			// TODO: Determine if it is a slope or not
-			displayBitmapToLCD(c.x*PX_PER_BLOCK, c.y*PX_PER_BLOCK, PX_PER_BLOCK, PX_PER_BLOCK, terrainFull);
+			displayBitmapToLCD(c.x*PX_PER_BLOCK, c.y*PX_PER_BLOCK, PX_PER_BLOCK, PX_PER_BLOCK, getTerrainMap(t, c));
 		}
 	}
 }
