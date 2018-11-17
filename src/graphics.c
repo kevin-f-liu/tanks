@@ -35,10 +35,10 @@ typedef struct {
 
 typedef struct {
 	int8_t val; // out of 100
-	int x;
-	int y;
-	int width;
-	int height;
+	uint16_t x;
+	uint16_t y;
+	uint16_t width;
+	uint16_t height;
 	uint16_t color;
 } value_bar_t;
 
@@ -95,6 +95,7 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
 		p1_hp->x = 0;
 		p1_hp->y = 10;
 		p2_hp->x = TERRAIN_WIDTH_PX - VALUE_BAR_WIDTH;
+		p1_hp->y = 10;
 		p2_hp->y = 10;
 		power->x = TERRAIN_WIDTH_PX / 2 - VALUE_BAR_WIDTH / 2; // Centered 
 		power->y = 10;
@@ -107,8 +108,8 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
 		p1_hp->color = P1_HP_COLOR;
 		p2_hp->color = P2_HP_COLOR;
 		power->color = POWER_COLOR;
-		p1_hp->val = MAX_BAR_VAL;
-		p2_hp->val = MAX_BAR_VAL;
+		p1_hp->val = MAX_BAR_VAL+1;
+		p2_hp->val = MAX_BAR_VAL+1;
 		power->val = MAX_BAR_VAL+1; // Just need a value that is higher than max
 }
 
@@ -131,7 +132,8 @@ void displayBitmapToLCD(int col, int row, int width, int height, const uint16_t*
     GLCD_Bitmap(col, row, width, height, (unsigned char*) bitmap);
 }
 
-void drawRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint16_t color) {
+void drawRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color) {
+		if (!width || !height) return;
 	  // draw a rectangle of pixels really fast
 	  int i, j;
 		
@@ -147,7 +149,7 @@ void drawRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint16_t colo
 		wr_dat_stop();
 }
 
-void clearRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
+void clearRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
     drawRect(x, y, width, height, BACKGROUND_COLOR);
 }
 
@@ -194,43 +196,54 @@ void drawTerrain(Terrain *t) {
 	}
 }
 
-uint8_t barValueToPixels(uint8_t val) {
-	return val * VALUE_BAR_WIDTH / MAX_BAR_VAL;
+void destroyTerrain(Coordinate c, Terrain *t) {
+	// Need to be signaled by the game logic in order update the terrain map and remove specifically the terrain
 }
 
-void updateHealthBar(uint8_t val, int8_t player) {
-	// For health just clear to the value, if it's not 100
-	value_bar_t *b = player == 1 ? p1_hp : p2_hp;
-	if (val == MAX_BAR_VAL) {
-		drawRect(b->x, b->y, b->width, b->height, b->color);
-	} else {
-		clearRect(b->x + barValueToPixels(val), b->y, barValueToPixels(val - b->val), b->height);
+uint16_t barValueToPixels(uint8_t val) {
+	return (int)((double)val * (double) VALUE_BAR_WIDTH / (double) MAX_BAR_VAL);
+}
+
+void updateBar(value_bar_t *b, uint8_t newVal) {
+	if (b->val > MAX_BAR_VAL) {
+		// Init
+		//printf("INIT: %d %d %d %d\n", b->x + barValueToPixels(newVal), b->y, barValueToPixels(MAX_BAR_VAL - newVal), b->height); 
+		drawRect(b->x, b->y, barValueToPixels(newVal), b->height, b->color);
+		drawRect(b->x + barValueToPixels(newVal), b->y, barValueToPixels(MAX_BAR_VAL - newVal), b->height, EMPTY_BAR_COLOR); 
+		b->val = newVal;
+		return;
 	}
-	b->val = val;
+	
+	uint16_t dif = abs(newVal - b->val);
+	uint16_t difpx = barValueToPixels(dif);
+	uint16_t prevVX = b->x + barValueToPixels(b->val);
+
+	if (!difpx) {
+		return;
+	}
+	
+	if (newVal < b->val) {
+		drawRect(prevVX - difpx-1, b->y, difpx+1, b->height, EMPTY_BAR_COLOR);
+	} else if (newVal > b->val) {
+		drawRect(prevVX-1, b->y, difpx+1, b->height, b->color); 
+	}
+	
+	b->val = newVal;
+}
+
+void updateHealthBar(uint8_t newVal, int player) {
+	value_bar_t *bar = player == 1 ? p1_hp : p2_hp;
+	updateBar(bar, newVal);
 }
 
 void updatePowerBar(uint8_t newVal) {
-	uint8_t dif = abs(newVal - power->val);
-	uint8_t prevVX = power->x + barValueToPixels(power->val);
-  
-	if (power->val > MAX_BAR_VAL) {
-		// Init
-		drawRect(power->x, power->y, barValueToPixels(newVal), power->height, power->color); 
-		power->val = newVal;
-		return;
-	}
-	if (newVal < power->val) {
-		printf("should be here: %d", prevVX - barValueToPixels(dif));
-		clearRect(prevVX - barValueToPixels(dif), power->y, barValueToPixels(dif), power->height);
-	} else if (newVal > power->val) {
-		drawRect(prevVX, power->y, barValueToPixels(dif), power->height, power->color); 
-	}
-	
-	power->val = newVal;
+	updateBar(power, newVal);
 }
 
 void drawPermText(void) {
-	
+	displayStringToLCD(0, 3, 0, "Player 1", 0);
+	displayStringToLCD(0, 24, 0, "Power", 0);
+	displayStringToLCD(0, 42, 0, "Player 2", 0);
 }
 
 void graphicsWorker(void const *arg) {
@@ -241,16 +254,21 @@ void graphicsWorker(void const *arg) {
 	char result[12]; // Temp storage string
   updateTank(90, 100, 60, 1);
 	// Init power
-	updatePowerBar(50);
+	updatePowerBar(100);
+	updateHealthBar(100,1);
+	updateHealthBar(100,2);
+	drawPermText();
 	while(true) {
 		sprintf(result, "%d", count);
 		displayStringToLCD(5, 5, 0, result, 12);
-		//updateTank(count + 100, 100, count % 180, 1);
+		//updateTank(100, 100, 20*count % 180, 1);
 		//updateShot(count, count);
-		//drawTerrain(t);
-		updatePowerBar(count % 100);
+		drawTerrain(t);
+		updatePowerBar(100 - 10 * (count % 10));
+		updateHealthBar(100 - count%100, 1);
+		updateHealthBar( 10* (count%10), 2);
 		count++;
-		osDelay(90);
+		osDelay(300);
 	}
 }
 
