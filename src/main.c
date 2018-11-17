@@ -15,6 +15,7 @@ Player p1, p2;
 uint8_t firepower = MAX_FIREPOWER;
 bool isP1 = true;
 bool newGame = false;
+bool wait = false;
 
 osSemaphoreId semaphore;
 osSemaphoreDef(semaphore);
@@ -26,6 +27,7 @@ Coordinate ball;
 
 void setupGame() {
   // generate terrain here
+	wait = true;
   generateTerrain(&terrain);
   setupPlayer(&p1, true);
   updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), &terrain);
@@ -34,6 +36,7 @@ void setupGame() {
   setupPlayer(&p2, false);
   updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), &terrain);
   printf("Pos: (%d,%d), (%d,%d)\n", p1.pos.x, p1.pos.y, p2.pos.x, p2.pos.y);
+	wait = false;
 }
 
 void potentiometerWorker(void const *arg) {
@@ -82,7 +85,7 @@ void joystickWorker(void const *arg) {
         delay = false;
         break;
     }
-    if (delay) {
+    if (delay && !wait) {
       if (isP1) {
         updatePosition(&p1, changePos, &terrain);
         updateAim(&p1, changeAim + p1.aimAngle);
@@ -110,7 +113,7 @@ void pushbuttonWorker(void const *arg) {
         newGame = false;
       } else {
         // signal semaphore
-        osSemaphoreRelease(semaphore);
+				if (!wait) osSemaphoreRelease(semaphore);
       }
 
     } else if (!(~LPC_GPIO2->FIOPIN & (0x01 << 10))) {
@@ -124,6 +127,7 @@ void gameWorker(void const *arg) {
   while (true) {
     // wait for semaphore
     osSemaphoreWait(semaphore, osWaitForever);
+		wait = true;
     // maybe use mutex instead of priorityHigh thread
     printf("Firepower: %d\n", firepower);		
     bool collided = fire(isP1 ? &p1: &p2, &ball, &terrain, firepower);
@@ -145,6 +149,7 @@ void gameWorker(void const *arg) {
       ball = isP1 ? p1.pos : p2.pos;
       printf("Turn ended\n");
     }
+		wait = false;
     osThreadYield();
   }
 }
@@ -152,9 +157,8 @@ void gameWorker(void const *arg) {
 osThreadDef(potentiometerWorker, osPriorityNormal, 1, 0);
 osThreadDef(joystickWorker, osPriorityNormal, 1, 0);
 osThreadDef(pushbuttonWorker, osPriorityNormal, 1, 0);
-// test: semaphore should block game worker
 // once semaphore is available run the animation and calculations
-osThreadDef(gameWorker, osPriorityHigh, 1, 0);
+osThreadDef(gameWorker, osPriorityNormal, 1, 0);
 // graphics thread should have a high priority as well, but has a delay so it
 // wont block the other stuff?
 // osThreadDef(graphicsWorker, osPriorityNormal, 1, 0);
