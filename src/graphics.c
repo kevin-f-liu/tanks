@@ -8,6 +8,7 @@
 #include "graphics.h"
 #include "sprites.h"
 #include "terrain.h"
+#include "coordinate.h"
 
 typedef struct {
     int px;
@@ -96,8 +97,8 @@ void displayBitmapToLCD(int col, int row, int width, int height, const uint16_t*
     GLCD_Bitmap(col, row, width, height, (unsigned char*) bitmap);
 }
 
-void clearRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
-    // Clear a rectangle of pixels really fast
+void drawRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint16_t color) {
+	  // draw a rectangle of pixels really fast
 	  int i, j;
 		
 		GLCD_SetWindow(x, y, width, height);
@@ -106,10 +107,14 @@ void clearRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
 		wr_dat_start();
 		for (i = (height-1)*width; i > -1; i -= width) {
 			for (j = 0; j < width; j++) {
-				wr_dat_only(BACKGROUND_COLOR);
+				wr_dat_only(color);
 			}
 		}
 		wr_dat_stop();
+}
+
+void clearRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
+    drawRect(x, y, width, height, BACKGROUND_COLOR);
 }
 
 void updateTank(int newX, int newY, int newAng, char player) {
@@ -140,18 +145,35 @@ void updateShot(int newX, int newY) {
 	  shot->base.py = newY;
 }
 
+void drawTerrain(Terrain *t) {
+	int pxRow = -1;
+	for (int i = 0; i < TERRAIN_LENGTH; i++) {
+    if (!(i % TERRAIN_WIDTH)) {
+			// New line 
+			pxRow++;
+		}
+		if (t->x[i]) {
+			Coordinate c = getCoord(i);
+			// TODO: Determine if it is a slope or not
+			displayBitmapToLCD(c.x*PX_PER_BLOCK, c.y*PX_PER_BLOCK, PX_PER_BLOCK, PX_PER_BLOCK, terrainFull);
+		}
+	}
+}
+
 void graphicsWorker(void const *arg) {
+	Terrain *t = (Terrain *)arg;
 	initGraphics(BACKGROUND_COLOR, BACKGROUND_COLOR, Black);
 	int count = 0;
 	char result[12]; // Temp storage string
-  updateTank(100, 100, 60, 1);
+  updateTank(90, 100, 60, 1);
 	while(true) {
 		sprintf(result, "%d", count);
 		displayStringToLCD(5, 5, 0, result, 12);
-		updateTank(count + 100, 100, count % 180, 1);
-		updateShot(count, count);
+		//updateTank(count + 100, 100, count % 180, 1);
+		//updateShot(count, count);
+		drawTerrain(t);
 		count++;
-		osDelay(30);
+		osDelay(9000);
 	}
 }
 

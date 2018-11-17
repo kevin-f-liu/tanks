@@ -4,6 +4,14 @@
 #include "player.h"
 
 uint32_t getIndex(uint16_t x, uint16_t y) { return TERRAIN_WIDTH * y + x; }
+Coordinate getCoord(uint16_t idx) {
+	Coordinate c = {
+		.x = idx % TERRAIN_WIDTH,
+		.y = idx / TERRAIN_WIDTH
+	};
+	
+	return c;
+}
 
 void generateTerrain(Terrain* terrain) {
   for (int i = 0; i < TERRAIN_LENGTH; i++) {

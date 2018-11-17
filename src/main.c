@@ -161,7 +161,7 @@ osThreadDef(pushbuttonWorker, osPriorityNormal, 1, 0);
 osThreadDef(gameWorker, osPriorityNormal, 1, 0);
 // graphics thread should have a high priority as well, but has a delay so it
 // wont block the other stuff?
-// osThreadDef(graphicsWorker, osPriorityNormal, 1, 0);
+osThreadDef(graphicsWorker, osPriorityNormal, 1, 0);
 
 int main(void) {
   // Unit UART printing,
@@ -176,7 +176,7 @@ int main(void) {
   osThreadId t2 = osThreadCreate(osThread(joystickWorker), NULL);
   osThreadId t3 = osThreadCreate(osThread(pushbuttonWorker), NULL);
   osThreadId t4 = osThreadCreate(osThread(gameWorker), NULL);
-  // osThreadId t5 = osThreadCreate(osThread(graphicsWorker), NULL);
+  osThreadId t5 = osThreadCreate(osThread(graphicsWorker), &terrain);
   // Continue that main thread forever
   while (1);
 }
