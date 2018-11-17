@@ -181,6 +181,11 @@ void updateShot(int newX, int newY) {
 	  shot->base.py = newY;
 }
 
+uint8_t classifyTerrain(Terrain *t, Coordinate c) {
+	// Get the classification of a terrain coordinate, as in peak/slope etc
+	
+}
+
 void drawTerrain(Terrain *t) {
 	int pxRow = -1;
 	for (int i = 0; i < TERRAIN_LENGTH; i++) {
