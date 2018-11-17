@@ -33,10 +33,20 @@ typedef struct {
     base_sprite base;
 } shot_graph_t;
 
+typedef struct {
+	int8_t val; // out of 100
+	int x;
+	int y;
+	int width;
+	int height;
+	uint16_t color;
+} value_bar_t;
+
 // Globals
 tank_graph_t *t1, *t2;
 barrel_graph_t *b1, *b2;
 shot_graph_t *shot;
+value_bar_t *p1_hp, *p2_hp, *power;
 
 void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
     // Should also take in Allison's objects to init
@@ -52,30 +62,54 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
     b1 = malloc(sizeof(barrel_graph_t));
     b2 = malloc(sizeof(barrel_graph_t));
     shot = malloc(sizeof(shot_graph_t));
+	  p1_hp = malloc(sizeof(value_bar_t));
+		p2_hp = malloc(sizeof(value_bar_t));
+	  power = malloc(sizeof(value_bar_t));
+
     
 		initBarrelmap(1);
 	
+		// Set all spritemaps
     t1->base.spritemap = tankmap;
     t2->base.spritemap = tankmap;
 	  b1->base.spritemap = barrelmap;
     b2->base.spritemap = barrelmap;
 	  shot->base.spritemap = shotmap;
-    
+    // Init tanks
     t1->base.px = 0;
     t1->base.py = TANK_WIDTH - TANK_HEIGHT;
 		t1->base.width = TANK_WIDTH;
 	  t1->base.height = TANK_HEIGHT;
 		t1->barrelOffset = TANK_WIDTH - TANK_HEIGHT;
-		
+		// Init barrels
 		b1->base.px = 0;
 		b1->base.py = 0;
 		b1->base.width = TANK_WIDTH;
 		b1->base.height = TANK_WIDTH;
-		
+		// Init shot
 		shot->base.px = 0;
 		shot->base.py = 0;
 		shot->base.width = SHOT_WIDTH;
 		shot->base.height = SHOT_WIDTH;
+		// Init bars, it's all constants so this can be technically removed
+		p1_hp->x = 0;
+		p1_hp->y = 10;
+		p2_hp->x = TERRAIN_WIDTH_PX - VALUE_BAR_WIDTH;
+		p2_hp->y = 10;
+		power->x = TERRAIN_WIDTH_PX / 2 - VALUE_BAR_WIDTH / 2; // Centered 
+		power->y = 10;
+		p1_hp->height = VALUE_BAR_HEIGHT;
+		p2_hp->height = VALUE_BAR_HEIGHT;
+		power->height = VALUE_BAR_HEIGHT;
+		p1_hp->width = VALUE_BAR_WIDTH;
+		p2_hp->width = VALUE_BAR_WIDTH;
+		power->width = VALUE_BAR_WIDTH;
+		p1_hp->color = P1_HP_COLOR;
+		p2_hp->color = P2_HP_COLOR;
+		power->color = POWER_COLOR;
+		p1_hp->val = MAX_BAR_VAL;
+		p2_hp->val = MAX_BAR_VAL;
+		power->val = MAX_BAR_VAL+1; // Just need a value that is higher than max
 }
 
 void displayStringToLCD(int row, int column, int sz, char* str, int clear) {
@@ -160,20 +194,63 @@ void drawTerrain(Terrain *t) {
 	}
 }
 
+uint8_t barValueToPixels(uint8_t val) {
+	return val * VALUE_BAR_WIDTH / MAX_BAR_VAL;
+}
+
+void updateHealthBar(uint8_t val, int8_t player) {
+	// For health just clear to the value, if it's not 100
+	value_bar_t *b = player == 1 ? p1_hp : p2_hp;
+	if (val == MAX_BAR_VAL) {
+		drawRect(b->x, b->y, b->width, b->height, b->color);
+	} else {
+		clearRect(b->x + barValueToPixels(val), b->y, barValueToPixels(val - b->val), b->height);
+	}
+	b->val = val;
+}
+
+void updatePowerBar(uint8_t newVal) {
+	uint8_t dif = abs(newVal - power->val);
+	uint8_t prevVX = power->x + barValueToPixels(power->val);
+  
+	if (power->val > MAX_BAR_VAL) {
+		// Init
+		drawRect(power->x, power->y, barValueToPixels(newVal), power->height, power->color); 
+		power->val = newVal;
+		return;
+	}
+	if (newVal < power->val) {
+		printf("should be here: %d", prevVX - barValueToPixels(dif));
+		clearRect(prevVX - barValueToPixels(dif), power->y, barValueToPixels(dif), power->height);
+	} else if (newVal > power->val) {
+		drawRect(prevVX, power->y, barValueToPixels(dif), power->height, power->color); 
+	}
+	
+	power->val = newVal;
+}
+
+void drawPermText(void) {
+	
+}
+
 void graphicsWorker(void const *arg) {
+	printf("starting graphics worker\n");
 	Terrain *t = (Terrain *)arg;
 	initGraphics(BACKGROUND_COLOR, BACKGROUND_COLOR, Black);
 	int count = 0;
 	char result[12]; // Temp storage string
   updateTank(90, 100, 60, 1);
+	// Init power
+	updatePowerBar(50);
 	while(true) {
 		sprintf(result, "%d", count);
 		displayStringToLCD(5, 5, 0, result, 12);
 		//updateTank(count + 100, 100, count % 180, 1);
 		//updateShot(count, count);
-		drawTerrain(t);
+		//drawTerrain(t);
+		updatePowerBar(count % 100);
 		count++;
-		osDelay(9000);
+		osDelay(90);
 	}
 }
 

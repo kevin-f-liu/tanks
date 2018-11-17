@@ -138,7 +138,7 @@ void gameWorker(void const *arg) {
 			updateStatus(&p1, &terrain, &ball);
 			updateStatus(&p2, &terrain, &ball);
 		}
-    printTerrain(&terrain);
+    //printTerrain(&terrain);
     // check if game ends
     if (p1.HP <= 0 || p2.HP <= 0) {
       printf("Game Ended\n");
