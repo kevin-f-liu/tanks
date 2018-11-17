@@ -1,18 +1,21 @@
 #include "terrain.h"
 #include <stdio.h>
+#include "helper.h"
 #include "player.h"
 
 uint32_t getIndex(uint16_t x, uint16_t y) { return TERRAIN_WIDTH * y + x; }
 
-// prevent row 0 to be populated
 void generateTerrain(Terrain* terrain) {
   for (int i = 0; i < TERRAIN_LENGTH; i++) {
     terrain->x[i] = false;
   }
-  uint16_t row = 5;
-  // initialize flat ground
-  for (int j = row; j < TERRAIN_HEIGHT; j++) {
-    for (int i = 0; i < TERRAIN_WIDTH; i++) {
+  uint16_t row = 2 / 3 * TERRAIN_HEIGHT;
+  for (int i = 0; i < TERRAIN_WIDTH; i++) {
+    // randomly generated terrain, no idea if this works
+    row += random(-1, 1);
+    // prevent row 0 to be populated
+    if (row == 0) row = 1;
+    for (int j = row; j < TERRAIN_HEIGHT; j++) {
       terrain->x[getIndex(i, j)] = true;
     }
   }
@@ -46,16 +49,16 @@ uint16_t closestGround(Terrain* terrain, uint16_t x, uint16_t oldY) {
   uint32_t index = getIndex(x, oldY);
   uint16_t count = oldY;
   // hit wall, go up
-	if (terrain->x[index]){
-		while (index > 0) {
-			if (!terrain->x[index]) return count;
-			count--;
-			index -= TERRAIN_WIDTH;
-		}
-		return 0;
-	}
-	
-	// middle of air, go down
+  if (terrain->x[index]) {
+    while (index > 0) {
+      if (!terrain->x[index]) return count;
+      count--;
+      index -= TERRAIN_WIDTH;
+    }
+    return 0;
+  }
+
+  // middle of air, go down
   while (index < TERRAIN_LENGTH) {
     if (terrain->x[index]) return count - 1;
     count++;
