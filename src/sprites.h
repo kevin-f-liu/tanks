@@ -21,6 +21,8 @@ extern const uint16_t shotmap[SHOT_WIDTH*SHOT_WIDTH];
 extern const uint16_t terrainRSlope[TERRAIN_BLOCK_WIDTH*TERRAIN_BLOCK_WIDTH];
 extern const uint16_t terrainLSlope[TERRAIN_BLOCK_WIDTH*TERRAIN_BLOCK_WIDTH];
 extern const uint16_t terrainFull[TERRAIN_BLOCK_WIDTH*TERRAIN_BLOCK_WIDTH];
+extern const uint16_t explode1map[TERRAIN_BLOCK_WIDTH*TERRAIN_BLOCK_WIDTH];
+extern const uint16_t explode2map[TERRAIN_BLOCK_WIDTH*TERRAIN_BLOCK_WIDTH];
 extern void loadBarrelmap(int angle);
 extern void initBarrelmap(char player);
 #endif /* _SPRITE_H */

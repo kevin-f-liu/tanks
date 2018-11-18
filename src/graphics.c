@@ -130,8 +130,17 @@ void displayStringToLCD(int row, int column, int sz, char* str, int clear) {
 	GLCD_DisplayString(row, column, sz, str);
 }
 
+uint16_t pixelFromCoord(uint16_t val) {
+	return val * PX_PER_BLOCK;
+}
+
 void displayBitmapToLCD(int col, int row, int width, int height, const uint16_t* bitmap) {
-    GLCD_Bitmap(col, row, width, height, (unsigned char*) bitmap);
+    GLCD_Bitmap(col, row, width, height, (unsigned char*) bitmap); // Allow larger bitmaps in
+}
+
+void displayBlock(int x, int y, const uint16_t* bitmap) {
+	// Give block as terrain coordinate
+	displayBitmapToLCD(pixelFromCoord(x), pixelFromCoord(y), PX_PER_BLOCK, PX_PER_BLOCK, bitmap); 
 }
 
 void drawRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color) {
@@ -153,6 +162,10 @@ void drawRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t 
 
 void clearRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
     drawRect(x, y, width, height, BACKGROUND_COLOR);
+}
+
+void clearBlock(int x, int y) {
+	clearRect(pixelFromCoord(x), pixelFromCoord(y), PX_PER_BLOCK, PX_PER_BLOCK);
 }
 
 void updateTank(int newX, int newY, int newAng, char player) {
@@ -204,7 +217,7 @@ void drawTerrainSection(Terrain *t, Coordinate c, uint16_t width, uint16_t heigh
 		for (int j = 0; j < width; j++) {
 			Coordinate temp = {.x=c.x+j, .y=c.y+i};
 			if (t->x[getIndex(temp.x, temp.y)]) {
-				displayBitmapToLCD(temp.x*PX_PER_BLOCK, temp.y*PX_PER_BLOCK, PX_PER_BLOCK, PX_PER_BLOCK, getTerrainMap(t, temp));
+				displayBitmapToLCD(pixelFromCoord(temp.x), pixelFromCoord(temp.y), PX_PER_BLOCK, PX_PER_BLOCK, getTerrainMap(t, temp));
 			}
 		}
 	}
@@ -215,23 +228,32 @@ void drawTerrain(Terrain *t) {
 	drawTerrainSection(t, o, TERRAIN_WIDTH, TERRAIN_HEIGHT);
 }
 
-void destroyTerrain(Coordinate c, Terrain *t) {
+void explodeOrClear(int x, int y, char run, const uint16_t *map) {
+	run % 2 ? clearBlock(x, y) : displayBlock(x, y, map);
+}
+
+void animateExplosion(Coordinate c, Terrain *t) {
 	// Actual animation of the explosion
 	// Need to be signaled by the game logic in order update the terrain map and remove specifically the terrain
 	// update terrain
-  uint16_t count = RADIUS_OF_DAMAGE;
-  for (int16_t i = 0; i <= RADIUS_OF_DAMAGE; i++) {
-		
-    setFalse(terrain, c->x + i, c->y);
-    setFalse(terrain, c->x - i, c->y);
-    for (uint16_t j = 1; j <= count; j++) {
-      setFalse(terrain, c->x + i, c->y + j);
-      setFalse(terrain, c->x + i, c->y - j);
-      setFalse(terrain, c->x - i, c->y + j);
-      setFalse(terrain, c->x - i, c->y - j);
-    }
-    count--;
-  }
+	const uint16_t* map = explode1map;
+	for (char run = 0; run < 2; run++) {
+		uint16_t count = RADIUS_OF_DAMAGE;
+		for (int16_t i = 0; i <= RADIUS_OF_DAMAGE; i++) {
+			map = i%2 ? explode1map : explode2map;
+			explodeOrClear(c.x + i, c.y, run, map); 
+			explodeOrClear(c.x - i, c.y, run, map); 
+			for (uint16_t j = 1; j <= count; j++) {
+				map = i%2 ? explode2map : explode1map;
+				explodeOrClear(c.x + i, c.y + j, run, map);
+				explodeOrClear(c.x + i, c.y - j, run, map);
+				explodeOrClear(c.x - i, c.y + j, run, map);
+				explodeOrClear(c.x - i, c.y - j, run, map);
+				busyWait(100000);
+			}
+			count--;
+		}
+	}
 }
 
 uint16_t barValueToPixels(uint8_t val) {
@@ -293,6 +315,9 @@ void graphicsWorker(void const *arg) {
 	updateHealthBar(100,2);
 	drawPermText();
 	drawTerrain(t);
+	osDelay(15000);
+	Coordinate strike = {.x=24, .y=24};
+	animateExplosion(strike, t);
 	while(true) {
 		sprintf(result, "%d", count);
 		displayStringToLCD(29, 0, 0, result, 5);
