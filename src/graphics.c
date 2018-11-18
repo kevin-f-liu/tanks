@@ -24,6 +24,7 @@ typedef struct {
     base_sprite base;
     int angle;
 	  int barrelOffset;
+	  Coordinate *pc;
 } tank_graph_t;
 
 typedef struct {
@@ -63,6 +64,8 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
     // Init all sprites and locations
     t1 = malloc(sizeof(tank_graph_t));
     t2 = malloc(sizeof(tank_graph_t));
+	  t1->pc = malloc(sizeof(Coordinate));
+	  t2->pc = malloc(sizeof(Coordinate));
     b1 = malloc(sizeof(barrel_graph_t));
     b2 = malloc(sizeof(barrel_graph_t));
     shot = malloc(sizeof(shot_graph_t));
@@ -85,6 +88,8 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
 		t1->base.width = TANK_WIDTH;
 	  t1->base.height = TANK_HEIGHT;
 		t1->barrelOffset = TANK_WIDTH - TANK_HEIGHT;
+		t1->pc->x = 0; // Kinda wrong, but overwritten very quickly
+		t1->pc->y = 0;
 		// Init barrels
 		b1->base.px = 0;
 		b1->base.py = 0;
@@ -207,26 +212,62 @@ void updateTank(int newX, int newY, int newAng, char player) {
     tank_graph_t *tank = player == 1 ? t1 : t2;
 	  barrel_graph_t *barrel = player == 1 ? b1 : b2;
 		
-	  // Update barrel first
+	  // Update barrel first, if invalid angle, then don't change it
 	  if (newAng <= 180 && newAng >= -180) {
 			  loadBarrelmap(newAng);			  
 		}
 		
+		// Barrel map completely overlaps tank bitmap, so clear that one
 	  clearRect(barrel->base.px, barrel->base.py, barrel->base.width, barrel->base.height);
 		
 		// Barrel update should go first to draw tank on top of barrel
 		displayBitmapToLCD(newX, newY, barrel->base.width, barrel->base.height, barrel->base.spritemap);
     displayBitmapToLCD(newX, newY + tank->barrelOffset, tank->base.width, tank->base.height, tank->base.spritemap);
-		
-		// Will need to regenerate terrain
-		
+				
 		barrel->base.px = newX;
 	  barrel->base.py = newY;
 	  tank->base.px = newX;
 	  tank->base.py = newY + tank->barrelOffset;
 }
 
+void moveTank(Coordinate c, char player) {
+  // Animate tank between terrain coordinates
+  tank_graph_t *tank = player == 1 ? t1 : t2;
+	barrel_graph_t *barrel = player == 1 ? b1 : b2;
+	
+	// Rereference tank so bottom is on the coordinate
+	int xPx = pixelFromCoord(c.x) - (TANK_WIDTH / 2 - PX_PER_BLOCK / 2);
+	int yPx = pixelFromCoord(c.y) - (TANK_WIDTH - PX_PER_BLOCK);
+	
+	updateTank(xPx, yPx, 1000, player);
+	
+	Coordinate temp = {.x=0, .y=0};
+	updateCoordinate(&temp, min(tank->pc->x, c.x) - 4, min(tank->pc->y, c.y) - 7);
+	int width = max(tank->pc->x, c.x) - min(tank->pc->x, c.x) + 8;
+	int height = max(tank->pc->y, c.y) - min(tank->pc->y, c.y) + 8;
+	drawTerrainSection(t, temp, width, height);
+	
+	// Set tank coord
+	tank->pc->x = c.x;
+	tank->pc->y = c.y;
+}
+
+void aimTank(int newAng, char player) {
+	// Animate tank barrel rotation
+	tank_graph_t *tank = player == 1 ? t1 : t2;
+	barrel_graph_t *barrel = player == 1 ? b1 : b2;
+	
+	// use the coordinate of the barrel so that tank does not move
+	updateTank(barrel->base.px, barrel->base.py, newAng, player);
+}
+
+void initTank(Coordinate c, int angle, int player) {
+	moveTank(c, player);
+	aimTank(angle, player);
+}
+
 void updateShot(int newX, int newY) {
+	  // Update to pixel coordinate
 	  clearRect(shot->base.px, shot->base.py, shot->base.width, shot->base.height);
 	  displayBitmapToLCD(newX, newY, shot->base.width, shot->base.height, shot->base.spritemap);
 	  shot->base.px = newX;
@@ -319,22 +360,34 @@ void graphicsWorker(void const *arg) {
 	printf("starting graphics worker\n");
 	t = (Terrain *)arg;
 	initGraphics(BACKGROUND_COLOR, BACKGROUND_COLOR, Black);
+	
 	int count = 0;
 	char result[12]; // Temp storage string
-  updateTank(90, 100, 60, 1);
-	// Init power
+	
+	drawTerrain(t);
+	
+	// Init tank
+	Coordinate c = {.x=7, .y=34};
+	initTank(c, 0, 1);
+	
+	// Init bars, for testing
 	updatePowerBar(100);
 	updateHealthBar(100,1);
 	updateHealthBar(100,2);
 	drawPermText();
-	drawTerrain(t);
+
+	
+	// Testing explosion
+	/*
 	Coordinate strike = {.x=60, .y=34};
 	osDelay(7500);
 	impact(strike, t);
+	*/
 	while(true) {
 		sprintf(result, "%d", count);
-		displayStringToLCD(29, 0, 0, result, 5);
-		//updateTank(100, 100, 20*count % 180, 1);
+		displayStringToLCD(29 , 0, 0, result, 5);
+		updateCoordinate(&c, c.x+1, c.y);
+		moveTank(c, 1);
 		//updateShot(count, count);
 		updatePowerBar(100 - 10 * (count % 10));
 		updateHealthBar(100 - count%100, 1);

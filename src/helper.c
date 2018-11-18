@@ -47,3 +47,7 @@ double dist(Coordinate *c1, Coordinate *c2) {
 inline double toRad(int angle) {
 	return angle * M_PI / 180;
 }
+
+int min(int a, int b) { return a <= b ? a : b; }
+
+int max(int a, int b) { return a >= b ? a : b; }

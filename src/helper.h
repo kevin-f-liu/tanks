@@ -16,4 +16,6 @@ double dist(Coordinate *c1, Coordinate *c2);
 double toRad(int angle);
 float fastInvsqrt(float number);
 bool isEdge(Coordinate c, uint16_t width, uint16_t height);
+int min(int a, int b);
+int max(int a, int b);
 #endif
