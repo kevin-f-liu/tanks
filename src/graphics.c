@@ -10,6 +10,7 @@
 #include "terrain.h"
 #include "coordinate.h"
 #include "helper.h"
+#include "player.h"
 
 typedef struct {
     int px;
@@ -197,23 +198,40 @@ const uint16_t* getTerrainMap(Terrain *t, Coordinate c) {
 	return terrainFull;
 }
 
-void drawTerrain(Terrain *t) {
-	int pxRow = -1;
-	for (int i = 0; i < TERRAIN_LENGTH; i++) {
-    if (!(i % TERRAIN_WIDTH)) {
-			// New line 
-			pxRow++;
-		}
-		if (t->x[i]) {
-			Coordinate c = getCoord(i);
-			// TODO: Determine if it is a slope or not
-			displayBitmapToLCD(c.x*PX_PER_BLOCK, c.y*PX_PER_BLOCK, PX_PER_BLOCK, PX_PER_BLOCK, getTerrainMap(t, c));
+void drawTerrainSection(Terrain *t, Coordinate c, uint16_t width, uint16_t height) {
+	// Render terrain for a specific section
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			Coordinate temp = {.x=c.x+j, .y=c.y+i};
+			if (t->x[getIndex(temp.x, temp.y)]) {
+				displayBitmapToLCD(temp.x*PX_PER_BLOCK, temp.y*PX_PER_BLOCK, PX_PER_BLOCK, PX_PER_BLOCK, getTerrainMap(t, temp));
+			}
 		}
 	}
 }
 
+void drawTerrain(Terrain *t) {
+	Coordinate o = {.x=0, .y=0};
+	drawTerrainSection(t, o, TERRAIN_WIDTH, TERRAIN_HEIGHT);
+}
+
 void destroyTerrain(Coordinate c, Terrain *t) {
+	// Actual animation of the explosion
 	// Need to be signaled by the game logic in order update the terrain map and remove specifically the terrain
+	// update terrain
+  uint16_t count = RADIUS_OF_DAMAGE;
+  for (int16_t i = 0; i <= RADIUS_OF_DAMAGE; i++) {
+		
+    setFalse(terrain, c->x + i, c->y);
+    setFalse(terrain, c->x - i, c->y);
+    for (uint16_t j = 1; j <= count; j++) {
+      setFalse(terrain, c->x + i, c->y + j);
+      setFalse(terrain, c->x + i, c->y - j);
+      setFalse(terrain, c->x - i, c->y + j);
+      setFalse(terrain, c->x - i, c->y - j);
+    }
+    count--;
+  }
 }
 
 uint16_t barValueToPixels(uint8_t val) {
@@ -274,12 +292,12 @@ void graphicsWorker(void const *arg) {
 	updateHealthBar(100,1);
 	updateHealthBar(100,2);
 	drawPermText();
+	drawTerrain(t);
 	while(true) {
 		sprintf(result, "%d", count);
-		displayStringToLCD(5, 5, 0, result, 12);
+		displayStringToLCD(29, 0, 0, result, 5);
 		//updateTank(100, 100, 20*count % 180, 1);
 		//updateShot(count, count);
-		drawTerrain(t);
 		updatePowerBar(100 - 10 * (count % 10));
 		updateHealthBar(100 - count%100, 1);
 		updateHealthBar( 10* (count%10), 2);
