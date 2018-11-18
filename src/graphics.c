@@ -50,6 +50,8 @@ barrel_graph_t *b1, *b2;
 shot_graph_t *shot;
 value_bar_t *p1_hp, *p2_hp, *power;
 
+Terrain *t;
+
 void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
     // Should also take in Allison's objects to init
 	  // Init LCD module for use, with a background color and textcolor
@@ -168,34 +170,6 @@ void clearBlock(int x, int y) {
 	clearRect(pixelFromCoord(x), pixelFromCoord(y), PX_PER_BLOCK, PX_PER_BLOCK);
 }
 
-void updateTank(int newX, int newY, int newAng, char player) {
-    // x and y are the top left corner of a widthXwidth square. Same as barrel
-    tank_graph_t *tank = player == 1 ? t1 : t2;
-	  barrel_graph_t *barrel = player == 1 ? b1 : b2;
-		
-	  // Update barrel first
-	  if (newAng <= 180 && newAng >= -180) {
-			  loadBarrelmap(newAng);			  
-		}
-		
-	  clearRect(barrel->base.px, barrel->base.py, barrel->base.width, barrel->base.height);
-		
-		// Barrel update should go first to draw tank on top of barrel
-		displayBitmapToLCD(newX, newY, barrel->base.width, barrel->base.height, barrel->base.spritemap);
-    displayBitmapToLCD(newX, newY + tank->barrelOffset, tank->base.width, tank->base.height, tank->base.spritemap);
-		barrel->base.px = newX;
-	  barrel->base.py = newY;
-	  tank->base.px = newX;
-	  tank->base.py = newY + tank->barrelOffset;
-}
-
-void updateShot(int newX, int newY) {
-	  clearRect(shot->base.px, shot->base.py, shot->base.width, shot->base.height);
-	  displayBitmapToLCD(newX, newY, shot->base.width, shot->base.height, shot->base.spritemap);
-	  shot->base.px = newX;
-	  shot->base.py = newY;
-}
-
 const uint16_t* getTerrainMap(Terrain *t, Coordinate c) {
 	// Get the classification of a terrain coordinate, as in peak/slope etc and return a pointer to its map
 	if (isEdge(c, TERRAIN_WIDTH, TERRAIN_HEIGHT)) return terrainFull;
@@ -217,7 +191,7 @@ void drawTerrainSection(Terrain *t, Coordinate c, uint16_t width, uint16_t heigh
 		for (int j = 0; j < width; j++) {
 			Coordinate temp = {.x=c.x+j, .y=c.y+i};
 			if (t->x[getIndex(temp.x, temp.y)]) {
-				displayBitmapToLCD(pixelFromCoord(temp.x), pixelFromCoord(temp.y), PX_PER_BLOCK, PX_PER_BLOCK, getTerrainMap(t, temp));
+				displayBlock(temp.x, temp.y, getTerrainMap(t, temp));
 			}
 		}
 	}
@@ -226,6 +200,37 @@ void drawTerrainSection(Terrain *t, Coordinate c, uint16_t width, uint16_t heigh
 void drawTerrain(Terrain *t) {
 	Coordinate o = {.x=0, .y=0};
 	drawTerrainSection(t, o, TERRAIN_WIDTH, TERRAIN_HEIGHT);
+}
+
+void updateTank(int newX, int newY, int newAng, char player) {
+    // x and y are the top left corner of a widthXwidth square. Same as barrel
+    tank_graph_t *tank = player == 1 ? t1 : t2;
+	  barrel_graph_t *barrel = player == 1 ? b1 : b2;
+		
+	  // Update barrel first
+	  if (newAng <= 180 && newAng >= -180) {
+			  loadBarrelmap(newAng);			  
+		}
+		
+	  clearRect(barrel->base.px, barrel->base.py, barrel->base.width, barrel->base.height);
+		
+		// Barrel update should go first to draw tank on top of barrel
+		displayBitmapToLCD(newX, newY, barrel->base.width, barrel->base.height, barrel->base.spritemap);
+    displayBitmapToLCD(newX, newY + tank->barrelOffset, tank->base.width, tank->base.height, tank->base.spritemap);
+		
+		// Will need to regenerate terrain
+		
+		barrel->base.px = newX;
+	  barrel->base.py = newY;
+	  tank->base.px = newX;
+	  tank->base.py = newY + tank->barrelOffset;
+}
+
+void updateShot(int newX, int newY) {
+	  clearRect(shot->base.px, shot->base.py, shot->base.width, shot->base.height);
+	  displayBitmapToLCD(newX, newY, shot->base.width, shot->base.height, shot->base.spritemap);
+	  shot->base.px = newX;
+	  shot->base.py = newY;
 }
 
 void explodeOrClear(int x, int y, char run, const uint16_t *map) {
@@ -254,6 +259,14 @@ void animateExplosion(Coordinate c, Terrain *t) {
 			count--;
 		}
 	}
+}
+
+void impact(Coordinate c, Terrain *t) {
+	// Animate explosion impact and rerender terrain
+	// Should render both tanks as well maybe?
+	animateExplosion(c, t);
+	updateCoordinate(&c, c.x - RADIUS_OF_DAMAGE, c.y - RADIUS_OF_DAMAGE);
+	drawTerrainSection(t, c, 2*RADIUS_OF_DAMAGE + 1, 2*RADIUS_OF_DAMAGE + 1);
 }
 
 uint16_t barValueToPixels(uint8_t val) {
@@ -304,7 +317,7 @@ void drawPermText(void) {
 
 void graphicsWorker(void const *arg) {
 	printf("starting graphics worker\n");
-	Terrain *t = (Terrain *)arg;
+	t = (Terrain *)arg;
 	initGraphics(BACKGROUND_COLOR, BACKGROUND_COLOR, Black);
 	int count = 0;
 	char result[12]; // Temp storage string
@@ -315,9 +328,9 @@ void graphicsWorker(void const *arg) {
 	updateHealthBar(100,2);
 	drawPermText();
 	drawTerrain(t);
-	osDelay(15000);
-	Coordinate strike = {.x=24, .y=24};
-	animateExplosion(strike, t);
+	Coordinate strike = {.x=60, .y=34};
+	osDelay(7500);
+	impact(strike, t);
 	while(true) {
 		sprintf(result, "%d", count);
 		displayStringToLCD(29, 0, 0, result, 5);
