@@ -15,7 +15,8 @@
 #define SHOT_WIDTH 4
 #define TERRAIN_BLOCK_WIDTH 4
 
-extern const uint16_t tankmap[TANK_HEIGHT*TANK_WIDTH];
+extern const uint16_t tankmap1[TANK_HEIGHT*TANK_WIDTH];
+extern const uint16_t tankmap2[TANK_HEIGHT*TANK_WIDTH];
 extern uint16_t barrelmap[TANK_WIDTH*TANK_WIDTH];
 extern const uint16_t shotmap[SHOT_WIDTH*SHOT_WIDTH];
 extern const uint16_t terrainRSlope[TERRAIN_BLOCK_WIDTH*TERRAIN_BLOCK_WIDTH];
