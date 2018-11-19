@@ -149,7 +149,6 @@ void gameWorker(void const *arg) {
       updateStatus(&p1, &terrain, &ball);
       updateStatus(&p2, &terrain, &ball);
       osSemaphoreWait(graphics, osWaitForever);
-      collided = false;
     }
     // printTerrain(&terrain);
     // check if game ends
@@ -175,6 +174,7 @@ void graphicsWorker(void const *arg) {
     // displayStringToLCD(29, 0, 0, result, 5);
     if (collided) {
       impact(ball, &terrain);
+      collided = false;
       // signal game worker to continue after explosion animation
       osSemaphoreRelease(graphics);
     }
