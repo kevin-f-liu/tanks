@@ -3,6 +3,7 @@
 
 #include "uart.h"
 
+#define BOUNDARY 4
 typedef struct {
   // between 0 to 319
   int x;
