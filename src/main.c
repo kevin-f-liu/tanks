@@ -178,8 +178,8 @@ void graphicsWorker(void const *arg) {
       // signal game worker to continue after explosion animation
       osSemaphoreRelease(graphics);
     }
-    updateGrahics(&p1, true);
-    updateGrahics(&p2, false);
+    updateGraphics(&p1, true);
+    updateGraphics(&p2, false);
     updateShot(ball);
     updatePowerBar(firepower);
     // osDelay(300);
