@@ -40,7 +40,7 @@ bool collide(Terrain* terrain, Coordinate* c) {
   return terrain->x[getIndex(c->x, c->y)];
 }
 
-void setFalse(Terrain* terrain, uint16_t x, uint16_t y) {
+void setFalse(Terrain* terrain, int32_t x, int32_t y) {
   if (x >= 0 && x < TERRAIN_WIDTH && y >= 0 && y < TERRAIN_HEIGHT) {
     terrain->x[getIndex(x, y)] = false;
   }
@@ -61,6 +61,7 @@ void damage(Terrain* terrain, Coordinate* c) {
     count++;
   }
 }
+
 uint16_t closestGround(Terrain* terrain, uint16_t x, uint16_t oldY) {
   uint32_t index = getIndex(x, oldY);
   uint16_t count = oldY;

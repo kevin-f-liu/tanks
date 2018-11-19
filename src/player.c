@@ -1,6 +1,7 @@
 #include "player.h"
 #include <math.h>
 #include <stdio.h>
+#include "graphics.h"
 #include "helper.h"
 
 void setupPlayer(Player *p, bool isP1) {
@@ -11,7 +12,7 @@ void setupPlayer(Player *p, bool isP1) {
 
 void updateHealth(Player *p, Coordinate *land) {
   double d = dist(&p->pos, land);
-		printf("d: (%f)\n", d);
+  printf("d: (%f)\n", d);
   // reduce hp if the tank is within the hit radius
   if (d < RADIUS_OF_DAMAGE) {
     p->HP -= MAX_DAMAGE - d / RADIUS_OF_DAMAGE * MAX_DAMAGE;
@@ -43,21 +44,26 @@ void updateStatus(Player *p, Terrain *terrain, Coordinate *ball) {
 bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower) {
   int32_t dx = round(firepower * cos(toRad(p->aimAngle)));
   int32_t dy = round(firepower * sin(toRad(p->aimAngle)));
-  bool passPeak = false;
   // move until collison or x out of range or y too low
   while (!collide(terrain, ball)) {
     // out of range
-    if (ball->x + dx > TERRAIN_WIDTH || ball->x + dx < 0 || ball->y - dy > TERRAIN_HEIGHT ) return false;
+    if (ball->x + dx > TERRAIN_WIDTH || ball->x + dx < 0 ||
+        ball->y - dy > TERRAIN_HEIGHT)
+      return false;
     ball->x += dx;
-		ball->y -= dy;
-		
-		printf("Ball: (%d,%d)\n", ball->x, ball->y);
-    if (firepower == 0) {
-      passPeak = true;
-    }
+    ball->y -= dy;
+
+    printf("Ball: (%d,%d)\n", ball->x, ball->y);
     dy--;
-		// leave time for graphics to update
-		busyWait(10000);
+    // leave time for graphics to update
+    busyWait(10000);
   }
   return true;
+}
+
+void updateGraphics(Player *p, bool isP1) {
+  uint8_t playerNum = isP1 ? 1 : 2;
+  moveTank(p->pos, playerNum);
+  aimTank(p->aimAngle, playerNum);
+  updateHealthBar(p->HP, playerNum);
 }

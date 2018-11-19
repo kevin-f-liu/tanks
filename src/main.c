@@ -16,9 +16,13 @@ uint8_t firepower = MAX_FIREPOWER;
 bool isP1 = true;
 bool newGame = false;
 bool wait = false;
+bool collided = false;
 
 osSemaphoreId semaphore;
 osSemaphoreDef(semaphore);
+
+osSemaphoreId graphics;
+osSemaphoreDef(graphics);
 
 Terrain terrain;
 // coordinate of the ball
@@ -27,7 +31,7 @@ Coordinate ball;
 
 void setupGame() {
   // generate terrain here
-	wait = true;
+  wait = true;
   generateTerrain(&terrain);
   setupPlayer(&p1, true);
   updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), &terrain);
@@ -36,7 +40,14 @@ void setupGame() {
   setupPlayer(&p2, false);
   updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), &terrain);
   printf("Pos: (%d,%d), (%d,%d)\n", p1.pos.x, p1.pos.y, p2.pos.x, p2.pos.y);
-	wait = false;
+
+  drawTerrain(&terrain);
+
+  // Init tanks
+  initTank(p1.pos, p1.aimAngle, 1);
+  initTank(p2.pos, p2.aimAngle, 2);
+
+  wait = false;
 }
 
 void potentiometerWorker(void const *arg) {
@@ -113,7 +124,7 @@ void pushbuttonWorker(void const *arg) {
         newGame = false;
       } else {
         // signal semaphore
-				if (!wait) osSemaphoreRelease(semaphore);
+        if (!wait) osSemaphoreRelease(semaphore);
       }
 
     } else if (!(~LPC_GPIO2->FIOPIN & (0x01 << 10))) {
@@ -127,18 +138,20 @@ void gameWorker(void const *arg) {
   while (true) {
     // wait for semaphore
     osSemaphoreWait(semaphore, osWaitForever);
-		wait = true;
+    wait = true;
     // maybe use mutex instead of priorityHigh thread
-    printf("Firepower: %d\n", firepower);		
-    bool collided = fire(isP1 ? &p1: &p2, &ball, &terrain, firepower);
-		if (collided){
-			// update terrain
-			damage(&terrain, &ball);
-			// update health and position
-			updateStatus(&p1, &terrain, &ball);
-			updateStatus(&p2, &terrain, &ball);
-		}
-    //printTerrain(&terrain);
+    printf("Firepower: %d\n", firepower);
+    collided = fire(isP1 ? &p1 : &p2, &ball, &terrain, firepower);
+    if (collided) {
+      // update terrain
+      damage(&terrain, &ball);
+      // update health and position
+      updateStatus(&p1, &terrain, &ball);
+      updateStatus(&p2, &terrain, &ball);
+      osSemaphoreWait(graphics, osWaitForever);
+      collided = false;
+    }
+    // printTerrain(&terrain);
     // check if game ends
     if (p1.HP <= 0 || p2.HP <= 0) {
       printf("Game Ended\n");
@@ -149,8 +162,27 @@ void gameWorker(void const *arg) {
       ball = isP1 ? p1.pos : p2.pos;
       printf("Turn ended\n");
     }
-		wait = false;
+    wait = false;
     osThreadYield();
+  }
+}
+
+void graphicsWorker(void const *arg) {
+  // printf("starting graphics worker\n");
+  drawPermText();
+  while (true) {
+    // sprintf(result, "%d", count);
+    // displayStringToLCD(29, 0, 0, result, 5);
+    if (collided) {
+      impact(ball, &terrain);
+      // signal game worker to continue after explosion animation
+      osSemaphoreRelease(graphics);
+    }
+    updateGrahics(&p1, true);
+    updateGrahics(&p2, false);
+    updateShot(ball);
+    updatePowerBar(firepower);
+    // osDelay(300);
   }
 }
 
@@ -159,8 +191,6 @@ osThreadDef(joystickWorker, osPriorityNormal, 1, 0);
 osThreadDef(pushbuttonWorker, osPriorityNormal, 1, 0);
 // once semaphore is available run the animation and calculations
 osThreadDef(gameWorker, osPriorityNormal, 1, 0);
-// graphics thread should have a high priority as well, but has a delay so it
-// wont block the other stuff?
 osThreadDef(graphicsWorker, osPriorityNormal, 1, 0);
 
 int main(void) {
@@ -170,13 +200,16 @@ int main(void) {
   printf("Starting\n");
   osKernelInitialize();
   osKernelStart();
+  initGraphics(BACKGROUND_COLOR, BACKGROUND_COLOR, Black);
   setupGame();
   semaphore = osSemaphoreCreate(osSemaphore(semaphore), 0);
+  graphics = osSemaphoreCreate(osSemaphore(graphics), 0);
   osThreadId t1 = osThreadCreate(osThread(potentiometerWorker), NULL);
   osThreadId t2 = osThreadCreate(osThread(joystickWorker), NULL);
   osThreadId t3 = osThreadCreate(osThread(pushbuttonWorker), NULL);
   osThreadId t4 = osThreadCreate(osThread(gameWorker), NULL);
-  osThreadId t5 = osThreadCreate(osThread(graphicsWorker), &terrain);
+  osThreadId t5 = osThreadCreate(osThread(graphicsWorker), NULL);
   // Continue that main thread forever
-  while (1);
+  while (1)
+    ;
 }
