@@ -44,16 +44,34 @@ void updateStatus(Player *p, Terrain *terrain, Coordinate *ball) {
 bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower) {
   int32_t dx = round(firepower * cos(toRad(p->aimAngle)));
   int32_t dy = round(firepower * sin(toRad(p->aimAngle)));
+  int32_t tempX = ball->x;
+  int32_t tempY = ball->y;
   // move until collison or x out of range or y too low
   while (!collide(terrain, ball)) {
+    tempX += dx;
+    tempY -= dy;
     // out of range
-    if (ball->x + dx > TERRAIN_WIDTH || ball->x + dx < 0 ||
-        ball->y - dy > TERRAIN_HEIGHT)
-      return false;
-    ball->x += dx;
-    ball->y -= dy;
+    if (tempX > TERRAIN_WIDTH || tempX < 0) return false;
+    // no more ground to hit
+    if (tempY >= TERRAIN_HEIGHT) {
+      // explode at edge of screen
+      ball->x = tempX;
+      ball->y = TERRAIN_HEIGHT - 1;
+      return true;
+    }
+
+    // when ball is supposedly outside the screen, hide it
+    if (tempY < 0) {
+      *ball = p->pos;
+    }
+    // when ball is inside the screen, that's when collision will happen
+    else {
+      ball->x = tempX;
+      ball->y = tempY;
+    }
 
     printf("Ball: (%d,%d)\n", ball->x, ball->y);
+    printf("TempBall: (%d,%d)\n", tempX, tempY);
     dy--;
     // leave time for graphics to update
     busyWait(10000);
