@@ -45,7 +45,7 @@ void setupGame() {
 
   // Init tanks
   initTank(p1.pos, p1.aimAngle, 1);
-  initTank(p2.pos, p2.aimAngle, 2);
+  //initTank(p2.pos, p2.aimAngle, 2);
 
   wait = false;
 }
@@ -178,9 +178,10 @@ void graphicsWorker(void const *arg) {
       // signal game worker to continue after explosion animation
       osSemaphoreRelease(graphics);
     }
-    updateGrahics(&p1, true);
-    updateGrahics(&p2, false);
-    updateShot(ball);
+    updateGraphics(&p1, true);
+    //updateGraphics(&p2, false);
+		//TODO: should just pass in coordinate
+    updateShot(ball.x * 4, ball.y*4);
     updatePowerBar(firepower);
     // osDelay(300);
   }
