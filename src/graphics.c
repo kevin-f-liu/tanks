@@ -211,7 +211,8 @@ void drawTerrainSection(Terrain *t, Coordinate c, uint16_t width,
   // Render terrain for a specific section
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
-      Coordinate temp = {.x = c.x + j, .y = c.y + i};
+			Coordinate temp = {.x = 0, .y = 0};
+      updateCoordinate(&temp, c.x + j, c.y + i);
       if (t->x[getIndex(temp.x, temp.y)]) {
         displayBlock(temp.x, temp.y, getTerrainMap(t, temp));
       }
@@ -302,8 +303,8 @@ void updateShot(int newX, int newY) {
   shot->base.py = newY;
 }
 
-void explodeOrClear(int x, int y, char run, const uint16_t *map) {
-  run % 2 ? clearBlock(x, y) : displayBlock(x, y, map);
+void explodeOrClear(Coordinate *c, char run, const uint16_t *map) {
+  run % 2 ? clearBlock(c->x, c->y) : displayBlock(c->x, c->y, map);
 }
 
 void animateExplosion(Coordinate c, Terrain *t) {
@@ -311,18 +312,25 @@ void animateExplosion(Coordinate c, Terrain *t) {
   // Need to be signaled by the game logic in order update the terrain map and
   // remove specifically the terrain update terrain
   const uint16_t *map = explode1map;
+	Coordinate temp = {.x = 0, .y = 0};
   for (char run = 0; run < 2; run++) {
     uint16_t count = RADIUS_OF_DAMAGE;
     for (int16_t i = 0; i <= RADIUS_OF_DAMAGE; i++) {
       map = i % 2 ? explode1map : explode2map;
-      explodeOrClear(c.x + i, c.y, run, map);
-      explodeOrClear(c.x - i, c.y, run, map);
+			updateCoordinate(&temp, c.x + i, c.y);
+      explodeOrClear(&temp, run, map);
+			updateCoordinate(&temp, c.x - i, c.y);
+      explodeOrClear(&temp, run, map);
       for (uint16_t j = 1; j <= count; j++) {
         map = i % 2 ? explode2map : explode1map;
-        explodeOrClear(c.x + i, c.y + j, run, map);
-        explodeOrClear(c.x + i, c.y - j, run, map);
-        explodeOrClear(c.x - i, c.y + j, run, map);
-        explodeOrClear(c.x - i, c.y - j, run, map);
+				updateCoordinate(&temp, c.x + i, c.y + j);
+        explodeOrClear(&temp, run, map);
+				updateCoordinate(&temp, c.x + i, c.y - j);
+        explodeOrClear(&temp, run, map);
+				updateCoordinate(&temp, c.x - i, c.y + j);
+        explodeOrClear(&temp, run, map);
+				updateCoordinate(&temp, c.x - i, c.y - j);
+        explodeOrClear(&temp, run, map);
         busyWait(100000);
       }
       count--;
