@@ -38,7 +38,8 @@ void updateHealthBar(uint8_t newVal, int player);
 void drawPermText(void);
 void moveTank(Coordinate c, char player);
 void aimTank(int newAng, char player);
-void updateShot(Coordinate c);
+//void updateShot(Coordinate c);
+void updateShot(int newX, int newY);
 void impact(Coordinate c, Terrain* t);
 
 #endif /* _GRAPHICS_H */

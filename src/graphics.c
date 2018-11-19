@@ -274,13 +274,13 @@ void initTank(Coordinate c, int angle, int player) {
   aimTank(angle, player);
 }
 
-void updateShot(Coordinate c) {
+void updateShot(int newX, int newY) {
   // Update to pixel coordinate
   clearRect(shot->base.px, shot->base.py, shot->base.width, shot->base.height);
-  displayBitmapToLCD(c.x, c.y, shot->base.width, shot->base.height,
+  displayBitmapToLCD(newX, newY, shot->base.width, shot->base.height,
                      shot->base.spritemap);
-  shot->base.px = c.x;
-  shot->base.py = c.y;
+  shot->base.px = newX;
+  shot->base.py = newY;
 }
 
 void explodeOrClear(int x, int y, char run, const uint16_t *map) {
