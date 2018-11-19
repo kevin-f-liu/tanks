@@ -201,7 +201,7 @@ int main(void) {
   printf("Starting\n");
   osKernelInitialize();
   osKernelStart();
-  initGraphics(BACKGROUND_COLOR, BACKGROUND_COLOR, Black);
+  initGraphics(BACKGROUND_COLOR, BACKGROUND_COLOR, Black, &terrain);
   setupGame();
   semaphore = osSemaphoreCreate(osSemaphore(semaphore), 0);
   graphics = osSemaphoreCreate(osSemaphore(graphics), 0);

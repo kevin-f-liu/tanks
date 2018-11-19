@@ -53,7 +53,8 @@ value_bar_t *p1_hp, *p2_hp, *power;
 
 Terrain *t;
 
-void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor) {
+void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor, Terrain *te) {
+	t = te;
   // Should also take in Allison's objects to init
   // Init LCD module for use, with a background color and textcolor
   GLCD_Init();
@@ -251,7 +252,7 @@ void moveTank(Coordinate c, char player) {
 
   Coordinate temp = {.x = 0, .y = 0};
   updateCoordinate(&temp, min(tank->pc->x, c.x) - 4, min(tank->pc->y, c.y) - 7);
-  int width = max(tank->pc->x, c.x) - min(tank->pc->x, c.x) + 8;
+  int width = max(tank->pc->x, c.x) - min(tank->pc->x, c.x) + 9;
   int height = max(tank->pc->y, c.y) - min(tank->pc->y, c.y) + 8;
   drawTerrainSection(t, temp, width, height);
 

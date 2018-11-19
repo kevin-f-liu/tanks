@@ -8,6 +8,7 @@
 #define MAX_FIREPOWER 100
 #define RADIUS_OF_DAMAGE 3
 #define MAX_DAMAGE 20
+#define BOUNDARY 4
 
 typedef struct {
   // HP max 100

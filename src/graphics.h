@@ -29,7 +29,7 @@
 #define POWER_COLOR 0xBA12
 #define EMPTY_BAR_COLOR 0x6B4D
 
-extern void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor);
+void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor, Terrain *te);
 void displayStringToLCD(int row, int column, int sz, char* str, int clear);
 void drawTerrain(Terrain* t);
 void initTank(Coordinate c, int angle, int player);
