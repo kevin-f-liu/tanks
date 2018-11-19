@@ -35,8 +35,8 @@ void setupGame() {
   generateTerrain(&terrain);
   setupPlayer(&p1, true);
   updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), &terrain);
-  ball = p1.pos;
-
+  //ball = p1.pos;
+	hideShot(&ball);
   setupPlayer(&p2, false);
   updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), &terrain);
   printf("Pos: (%d,%d), (%d,%d)\n", p1.pos.x, p1.pos.y, p2.pos.x, p2.pos.y);
@@ -100,11 +100,11 @@ void joystickWorker(void const *arg) {
       if (isP1) {
         updatePosition(&p1, changePos, &terrain);
         updateAim(&p1, changeAim + p1.aimAngle);
-        ball = p1.pos;
+        //ball = p1.pos;
       } else {
         updatePosition(&p2, changePos, &terrain);
         updateAim(&p2, changeAim + p2.aimAngle);
-        ball = p2.pos;
+        //ball = p2.pos;
       }
       osDelay(1000);
     }
@@ -158,7 +158,8 @@ void gameWorker(void const *arg) {
     } else {
       // switch turn
       isP1 = !isP1;
-      ball = isP1 ? p1.pos : p2.pos;
+      //ball = isP1 ? p1.pos : p2.pos;
+			hideShot(&ball);
       printf("Turn ended\n");
     }
     wait = false;

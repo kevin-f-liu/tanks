@@ -214,9 +214,12 @@ void drawTerrain(Terrain *t) {
 }
 
 void updateTank(int newX, int newY, int newAng, char player) {
-  // x and y are the top left corner of a widthXwidth square. Same as barrel
+  // x and y are the top left corner of a widthXwidth square. Same as barrel	
   tank_graph_t *tank = player == 1 ? t1 : t2;
   barrel_graph_t *barrel = player == 1 ? b1 : b2;
+	
+	// Don't do anything if nothing changes
+  if (newX == barrel->base.px && newY == barrel->base.py && newAng == barrel->angle) return;
 
   // Update barrel first, if invalid angle, then don't change it
   if (newAng <= 180 && newAng >= -180) {
@@ -235,6 +238,7 @@ void updateTank(int newX, int newY, int newAng, char player) {
 
   barrel->base.px = newX;
   barrel->base.py = newY;
+	barrel->angle = newAng;
   tank->base.px = newX;
   tank->base.py = newY + tank->barrelOffset;
 }
@@ -248,7 +252,7 @@ void moveTank(Coordinate c, char player) {
   int xPx = pixelFromCoord(c.x) - (TANK_WIDTH / 2 - PX_PER_BLOCK / 2);
   int yPx = pixelFromCoord(c.y) - (TANK_WIDTH - PX_PER_BLOCK);
 
-  updateTank(xPx, yPx, 1000, player);
+  updateTank(xPx, yPx, barrel->angle, player);
 
   Coordinate temp = {.x = 0, .y = 0};
   updateCoordinate(&temp, min(tank->pc->x, c.x) - 4, min(tank->pc->y, c.y) - 7);
@@ -277,6 +281,9 @@ void initTank(Coordinate c, int angle, int player) {
 
 void updateShot(int newX, int newY) {
   // Update to pixel coordinate
+	// Don't do anything if nothing changes
+  if (newX == shot->base.px && newY == shot->base.py) return;
+	
   clearRect(shot->base.px, shot->base.py, shot->base.width, shot->base.height);
   displayBitmapToLCD(newX, newY, shot->base.width, shot->base.height,
                      shot->base.spritemap);

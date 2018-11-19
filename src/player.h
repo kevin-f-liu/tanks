@@ -27,5 +27,6 @@ void updateStatus(Player *p, Terrain *terrain, Coordinate *ball);
 // return true at collison, false if out of range
 bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower);
 void updateGraphics(Player *p, bool isP1);
+void hideShot(Coordinate *ball);
 
 #endif

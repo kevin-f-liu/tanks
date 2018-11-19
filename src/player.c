@@ -44,6 +44,7 @@ void updateStatus(Player *p, Terrain *terrain, Coordinate *ball) {
 bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower) {
   int32_t dx = round(firepower * cos(toRad(p->aimAngle)));
   int32_t dy = round(firepower * sin(toRad(p->aimAngle)));
+	*ball = p->pos;
   int32_t tempX = ball->x;
   int32_t tempY = ball->y;
   // move until collison or x out of range or y too low
@@ -62,7 +63,7 @@ bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower) {
 
     // when ball is supposedly outside the screen, hide it
     if (tempY < 0) {
-      *ball = p->pos;
+      hideShot(ball);
     }
     // when ball is inside the screen, that's when collision will happen
     else {
@@ -84,4 +85,8 @@ void updateGraphics(Player *p, bool isP1) {
   moveTank(p->pos, playerNum);
   aimTank(p->aimAngle, playerNum);
   updateHealthBar(p->HP, playerNum);
+}
+
+void hideShot(Coordinate *ball){
+	updateCoordinate(ball,0,TERRAIN_HEIGHT-1);
 }
