@@ -5,7 +5,7 @@
 #include "terrain.h"
 #include "uart.h"
 
-#define MAX_FIREPOWER 5
+#define MAX_FIREPOWER 100
 #define RADIUS_OF_DAMAGE 3
 #define MAX_DAMAGE 20
 

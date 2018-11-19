@@ -42,8 +42,8 @@ void updateStatus(Player *p, Terrain *terrain, Coordinate *ball) {
 }
 
 bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower) {
-  int32_t dx = round(firepower * cos(toRad(p->aimAngle)));
-  int32_t dy = round(firepower * sin(toRad(p->aimAngle)));
+  int32_t dx = round(firepower/10 * cos(toRad(p->aimAngle)));
+  int32_t dy = round(firepower/10 * sin(toRad(p->aimAngle)));
   // move until collison or x out of range or y too low
   while (!collide(terrain, ball)) {
     // out of range
