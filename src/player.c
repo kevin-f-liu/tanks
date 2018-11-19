@@ -20,8 +20,11 @@ void updateHealth(Player *p, Coordinate *land) {
 }
 
 void updatePosition(Player *p, int16_t dx, Terrain *terrain) {
-  int16_t newX = processValue(p->pos.x + dx, TERRAIN_WIDTH - 1 - BOUNDARY, BOUNDARY);
-  updateCoordinate(&p->pos, newX, closestGround(terrain, newX, p->pos.y));
+  uint16_t newX = processValue(p->pos.x + dx, TERRAIN_WIDTH - 1 - BOUNDARY, BOUNDARY);
+	uint32_t newY = closestGround(terrain, newX, p->pos.y);
+	int32_t ceil = ceiling(terrain, p->pos.x, p->pos.y);
+	if (ceil >= 0 && ceil >= newY)  return;
+  updateCoordinate(&p->pos, newX, newY);
 }
 
 void updateAim(Player *p, int16_t newAim) {
@@ -42,8 +45,8 @@ void updateStatus(Player *p, Terrain *terrain, Coordinate *ball) {
 }
 
 bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower) {
-  int32_t dx = round(firepower * cos(toRad(p->aimAngle)));
-  int32_t dy = round(firepower * sin(toRad(p->aimAngle)));
+  int32_t dx = round(firepower/10.0 * cos(toRad(p->aimAngle)));
+  int32_t dy = round(firepower/10.0 * sin(toRad(p->aimAngle)));
 	*ball = p->pos;
   int32_t tempX = ball->x;
   int32_t tempY = ball->y;
