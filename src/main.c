@@ -45,7 +45,7 @@ void setupGame() {
 
   // Init tanks
   initTank(p1.pos, p1.aimAngle, 1);
-  // initTank(p2.pos, p2.aimAngle, 2);
+  initTank(p2.pos, p2.aimAngle, 2);
 
   wait = false;
 }
@@ -180,7 +180,7 @@ void graphicsWorker(void const *arg) {
       osSemaphoreRelease(graphics);
     }
     updateGraphics(&p1, true);
-    // updateGraphics(&p2, false);
+    updateGraphics(&p2, false);
     // TODO: should just pass in coordinate
     updateShot(ball.x * 4, ball.y * 4);
     updatePowerBar(firepower);

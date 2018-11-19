@@ -77,8 +77,8 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor, Terrain *te
   initBarrelmap(1);
 
   // Set all spritemaps
-  t1->base.spritemap = tankmap;
-  t2->base.spritemap = tankmap;
+  t1->base.spritemap = tankmap1;
+  t2->base.spritemap = tankmap2;
   b1->base.spritemap = barrelmap;
   b2->base.spritemap = barrelmap;
   shot->base.spritemap = shotmap;
@@ -90,11 +90,22 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor, Terrain *te
   t1->barrelOffset = TANK_WIDTH - TANK_HEIGHT;
   t1->pc->x = 0;  // Kinda wrong, but overwritten very quickly
   t1->pc->y = 0;
+	t2->base.px = 0;
+  t2->base.py = TANK_WIDTH - TANK_HEIGHT;
+  t2->base.width = TANK_WIDTH;
+  t2->base.height = TANK_HEIGHT;
+  t2->barrelOffset = TANK_WIDTH - TANK_HEIGHT;
+  t2->pc->x = 0;  // Kinda wrong, but overwritten very quickly
+  t2->pc->y = 0;
   // Init barrels
   b1->base.px = 0;
   b1->base.py = 0;
   b1->base.width = TANK_WIDTH;
   b1->base.height = TANK_WIDTH;
+	b2->base.px = 0;
+  b2->base.py = 0;
+  b2->base.width = TANK_WIDTH;
+  b2->base.height = TANK_WIDTH;
   // Init shot
   shot->base.px = 0;
   shot->base.py = 0;
