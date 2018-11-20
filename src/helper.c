@@ -8,7 +8,6 @@
 void busyWait(uint32_t ticks) {
   for (int i = 0; i < ticks; i++)
     ;
-	printf("end wait\n");
 }
 
 int32_t random(int32_t lower, int32_t upper) {
@@ -51,3 +50,6 @@ inline double toRad(int angle) {
 int min(int a, int b) { return a <= b ? a : b; }
 
 int max(int a, int b) { return a >= b ? a : b; }
+
+
+

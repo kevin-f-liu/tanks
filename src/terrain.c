@@ -40,7 +40,7 @@ bool collide(Terrain* terrain, Coordinate* c) {
   return terrain->x[getIndex(c->x, c->y)];
 }
 
-void setFalse(Terrain* terrain, uint16_t x, uint16_t y) {
+void setFalse(Terrain* terrain, int32_t x, int32_t y) {
   if (x >= 0 && x < TERRAIN_WIDTH && y >= 0 && y < TERRAIN_HEIGHT) {
     terrain->x[getIndex(x, y)] = false;
   }
@@ -61,6 +61,29 @@ void damage(Terrain* terrain, Coordinate* c) {
     count++;
   }
 }
+
+//return -1 if no ceiling
+int16_t ceiling(Terrain* terrain, uint16_t x, uint16_t oldY){
+	int32_t index = getIndex(x, oldY);
+  uint16_t count = oldY;
+  // middle of air, go up
+	if (!terrain->x[index]) {
+    while (index >= 0) {
+      if (terrain->x[index]) return count;
+      count--;
+      index -= TERRAIN_WIDTH;
+    }
+    return -1;
+  }
+	// hit wall
+  while (index < TERRAIN_LENGTH) {
+    if (!terrain->x[index]) return count;
+    count++;
+    index += TERRAIN_WIDTH;
+  }
+  return TERRAIN_HEIGHT;
+}
+
 uint16_t closestGround(Terrain* terrain, uint16_t x, uint16_t oldY) {
   uint32_t index = getIndex(x, oldY);
   uint16_t count = oldY;

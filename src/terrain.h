@@ -17,6 +17,7 @@ void generateTerrain(Terrain *terrain);
 void printTerrain(Terrain *terrain);
 bool collide(Terrain *terrain, Coordinate *c);
 void damage(Terrain *terrain, Coordinate *c);
+int16_t ceiling(Terrain* terrain, uint16_t x, uint16_t oldY);
 // return the closest y value below given y
 uint16_t closestGround(Terrain *terrain, uint16_t newX, uint16_t oldY);
 uint32_t getIndex(uint16_t x, uint16_t y);
