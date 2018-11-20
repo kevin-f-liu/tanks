@@ -1,13 +1,13 @@
-#include <cmsis_os.h>
-#include <lpc17xx.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
 #include "GLCD.h"
 #include "graphics.h"
 #include "helper.h"
 #include "player.h"
 #include "terrain.h"
+#include <cmsis_os.h>
+#include <lpc17xx.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 
 Player p1, p2;
 
@@ -15,6 +15,7 @@ Player p1, p2;
 uint8_t firepower = MAX_FIREPOWER;
 bool isP1 = true;
 bool newGame = false;
+// keep track of whether variables can be updated by peripherals
 bool wait = false;
 bool collided = false;
 
@@ -35,19 +36,19 @@ void setupGame() {
   generateTerrain(&terrain);
   setupPlayer(&p1, true);
   updatePosition(&p1, random(0, TERRAIN_WIDTH / 4), &terrain);
-  //ball = p1.pos;
-	hideShot(&ball);
+  // ball = p1.pos;
+  hideShot(&ball);
   setupPlayer(&p2, false);
   updatePosition(&p2, random(3 * TERRAIN_WIDTH / 4, TERRAIN_WIDTH), &terrain);
   printf("Pos: (%d,%d), (%d,%d)\n", p1.pos.x, p1.pos.y, p2.pos.x, p2.pos.y);
-	
+
+  // graphics
   resetGraphics();
   drawTerrain(&terrain);
-
   // Init tanks
   initTank(p1.pos, p1.aimAngle, 1);
   initTank(p2.pos, p2.aimAngle, 2);
-	drawPermText();
+  drawPermText();
 
   wait = false;
 }
@@ -58,9 +59,9 @@ void potentiometerWorker(void const *arg) {
 
   LPC_SC->PCONP |= (0x01 << 12);
 
-  LPC_ADC->ADCR = (1 << 2) |  // select AD0.2 pin
-                  (4 << 8) |  // ADC clock is 25MHz/5
-                  (1 << 21);  // enable ADC
+  LPC_ADC->ADCR = (1 << 2) | // select AD0.2 pin
+                  (4 << 8) | // ADC clock is 25MHz/5
+                  (1 << 21); // enable ADC
   while (1) {
     LPC_ADC->ADCR |= (0x01 << 24);
     while (~LPC_ADC->ADGDR & (0x01 << 31))
@@ -80,34 +81,34 @@ void joystickWorker(void const *arg) {
     int8_t changeAim = 0;
     bool delay = true;
     switch (~(LPC_GPIO1->FIOPIN) & 0x07800000) {
-      case 0x01000000:
-        changePos += 1;
-        break;
-        // down is counter clockwise (25)
-      case 0x00800000:
-        changeAim -= 3;
-        break;
-        // up is clockwise (23)
-      case 0x02000000:
-        changeAim += 3;
-        break;
-      case 0x04000000:
-        changePos -= 1;
-        break;
-      default:
-        delay = false;
-        break;
+    case 0x01000000:
+      changePos += 1;
+      break;
+      // down is counter clockwise (25)
+    case 0x00800000:
+      changeAim -= 3;
+      break;
+      // up is clockwise (23)
+    case 0x02000000:
+      changeAim += 3;
+      break;
+    case 0x04000000:
+      changePos -= 1;
+      break;
+    default:
+      delay = false;
+      break;
     }
     if (delay && !wait) {
       if (isP1) {
+        // update position and ensure no overlap
         updatePositionWithCheck(&p1, changePos, &terrain, &p2);
         updateAim(&p1, -changeAim + p1.aimAngle);
-        //ball = p1.pos;
       } else {
         updatePositionWithCheck(&p2, changePos, &terrain, &p1);
         updateAim(&p2, changeAim + p2.aimAngle);
-        //ball = p2.pos;
       }
+      // reduce sensitivity of joystick
       osDelay(1250);
     }
   }
@@ -116,17 +117,17 @@ void joystickWorker(void const *arg) {
 void pushbuttonWorker(void const *arg) {
   bool lastButtonState = false;
   while (true) {
-    if ((~LPC_GPIO2->FIOPIN & (0x01 << 10)) != lastButtonState &&
-        !lastButtonState) {
+    // check if button is held
+    if ((~LPC_GPIO2->FIOPIN & (0x01 << 10)) != lastButtonState && !lastButtonState) {
       lastButtonState = true;
       if (newGame) {
         // reset game
-        // maybe use mutex
         setupGame();
         newGame = false;
       } else {
-        // signal semaphore
-        if (!wait) osSemaphoreRelease(semaphore);
+        // signal semaphore so game worker can do its thing
+        if (!wait)
+          osSemaphoreRelease(semaphore);
       }
 
     } else if (!(~LPC_GPIO2->FIOPIN & (0x01 << 10))) {
@@ -140,9 +141,10 @@ void gameWorker(void const *arg) {
   while (true) {
     // wait for semaphore
     osSemaphoreWait(semaphore, osWaitForever);
+    // block peripherals from updating variables
     wait = true;
-    // maybe use mutex instead of priorityHigh thread
     printf("Firepower: %d\n", firepower);
+    // fire updates the shot position, hence graphics will show new pos
     collided = fire(isP1 ? &p1 : &p2, isP1 ? &p2 : &p1, &ball, &terrain, firepower);
     if (collided) {
       // update terrain
@@ -150,20 +152,22 @@ void gameWorker(void const *arg) {
       // update health and position
       updateStatus(&p1, &terrain, &ball);
       updateStatus(&p2, &terrain, &ball);
+      // wait for explosion animation to finish
       osSemaphoreWait(graphics, osWaitForever);
     }
     // printTerrain(&terrain);
     // check if game ends
     if (p1.HP <= 0 || p2.HP <= 0) {
       newGame = true;
-			int gameResult = ((p1.HP <= 0) << 1) | (p2.HP <= 0); // 3 for tie, 1 for p1 win, 2 for p2 win
-			displayEndGame(gameResult);
+      // 3 for tie, 1 for p1 win, 2 for p2 win
+      int gameResult = ((p1.HP <= 0) << 1) | (p2.HP <= 0);
+      displayEndGame(gameResult);
       printf("Game Ended\n");
     } else {
       // switch turn
       isP1 = !isP1;
-      //ball = isP1 ? p1.pos : p2.pos;
-			hideShot(&ball);
+      // move ball out of sight
+      hideShot(&ball);
       printf("Turn ended\n");
     }
     wait = false;
@@ -173,23 +177,22 @@ void gameWorker(void const *arg) {
 
 void graphicsWorker(void const *arg) {
   while (true) {
-		if (!newGame){
-    // sprintf(result, "%d", count);
-    // displayStringToLCD(29, 0, 0, result, 5);
-    if (collided) {
-      impact(ball, &terrain);
-      collided = false;
-      // signal game worker to continue after explosion animation
-			printf("RELEASSING\n");
-      osSemaphoreRelease(graphics);
+    if (!newGame) {
+      if (collided) {
+        // explosion animation
+        impact(ball, &terrain);
+        collided = false;
+        // signal game worker to continue after explosion animation
+        printf("RELEASING\n");
+        osSemaphoreRelease(graphics);
+      }
+      updateGraphics(&p1, true);
+      updateGraphics(&p2, false);
+      // TODO: should just pass in coordinate
+      updateShot(ball.x * 4, ball.y * 4);
+      updatePowerBar(firepower);
+      // osDelay(300);
     }
-    updateGraphics(&p1, true);
-    updateGraphics(&p2, false);
-    // TODO: should just pass in coordinate
-    updateShot(ball.x * 4, ball.y * 4);
-    updatePowerBar(firepower);
-    // osDelay(300);
-	}
   }
 }
 
@@ -201,16 +204,15 @@ osThreadDef(gameWorker, osPriorityNormal, 1, 0);
 osThreadDef(graphicsWorker, osPriorityNormal, 1, 0);
 
 int main(void) {
-  // Unit UART printing,
-  // Init kernel
-  // Init 3 threads for data collection, processing, and sending
   printf("Starting\n");
   osKernelInitialize();
   osKernelStart();
   initGraphics(BACKGROUND_COLOR, BACKGROUND_COLOR, Black, &terrain);
   setupGame();
+  // init semaphores
   semaphore = osSemaphoreCreate(osSemaphore(semaphore), 0);
   graphics = osSemaphoreCreate(osSemaphore(graphics), 0);
+  // start threads
   osThreadId t1 = osThreadCreate(osThread(potentiometerWorker), NULL);
   osThreadId t2 = osThreadCreate(osThread(joystickWorker), NULL);
   osThreadId t3 = osThreadCreate(osThread(pushbuttonWorker), NULL);

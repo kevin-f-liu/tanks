@@ -1,9 +1,9 @@
 #include "player.h"
+#include "graphics.h"
+#include "helper.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "graphics.h"
-#include "helper.h"
 
 void setupPlayer(Player *p, bool isP1) {
   p->HP = 100;
@@ -20,13 +20,12 @@ void updateHealth(Player *p, Coordinate *land) {
 }
 
 bool isOverlap(Player *p1, Player *p2) {
-  return abs(p1->pos.x - p2->pos.x) < TANK_WIDTH_COORD + 2 &&
-         abs(p1->pos.y - p2->pos.y) < TANK_HEIGHT_COORD;
+  return abs(p1->pos.x - p2->pos.x) < TANK_WIDTH_COORD + 2 && abs(p1->pos.y - p2->pos.y) < TANK_HEIGHT_COORD;
 }
 
-void updatePositionWithCheck(Player *p, int16_t dx, Terrain *terrain,
-                             Player *p2) {
-  if (dx == 0) return;
+void updatePositionWithCheck(Player *p, int16_t dx, Terrain *terrain, Player *p2) {
+  if (dx == 0)
+    return;
   Player tempPlayer = *p;
   updatePosition(&tempPlayer, dx, terrain);
   if (!isOverlap(&tempPlayer, p2)) {
@@ -35,12 +34,11 @@ void updatePositionWithCheck(Player *p, int16_t dx, Terrain *terrain,
 }
 
 void updatePosition(Player *p, int16_t dx, Terrain *terrain) {
-  uint16_t newX =
-      processValue(p->pos.x + dx, TERRAIN_WIDTH - 1 - TANK_WIDTH_COORD / 2,
-                   TANK_WIDTH_COORD / 2);
+  uint16_t newX = processValue(p->pos.x + dx, TERRAIN_WIDTH - 1 - TANK_WIDTH_COORD / 2, TANK_WIDTH_COORD / 2);
   uint32_t newY = closestGround(terrain, newX, p->pos.y);
   int32_t ceil = ceiling(terrain, p->pos.x, p->pos.y);
-  if (ceil >= 0 && ceil >= newY) return;
+  if (ceil >= 0 && ceil >= newY)
+    return;
   updateCoordinate(&p->pos, newX, newY);
 }
 
@@ -62,23 +60,23 @@ void updateStatus(Player *p, Terrain *terrain, Coordinate *ball) {
 }
 
 double interval(int32_t self, int32_t other) {
-  if (self == 0) return 0;
+  if (self == 0)
+    return 0;
   // if i am smaller than the other, use me as the base
   if (abs(self) < abs(other) || other == 0) {
-    if (self < 0) return -1;
+    if (self < 0)
+      return -1;
     return 1;
   }
   return (double)self / abs(other);
 }
 
 bool hitTank(Player *p, Coordinate *ball) {
-  return (ball->x <= p->pos.x + TANK_WIDTH_COORD / 2) &&
-         (ball->x >= p->pos.x - TANK_WIDTH_COORD / 2) &&
+  return (ball->x <= p->pos.x + TANK_WIDTH_COORD / 2) && (ball->x >= p->pos.x - TANK_WIDTH_COORD / 2) &&
          (ball->y <= p->pos.y) && (ball->y >= p->pos.y - TANK_HEIGHT_COORD);
 }
 
-bool fire(Player *p, Player *p2, Coordinate *ball, Terrain *terrain,
-          uint16_t firepower) {
+bool fire(Player *p, Player *p2, Coordinate *ball, Terrain *terrain, uint16_t firepower) {
   int32_t dx = round(firepower / 10.0 * cos(toRad(p->aimAngle)));
   int32_t dy = round(firepower / 10.0 * sin(toRad(p->aimAngle)));
   bool xIsBase = abs(dx) < abs(dy) || dy == 0;
@@ -96,7 +94,8 @@ bool fire(Player *p, Player *p2, Coordinate *ball, Terrain *terrain,
     tempX = tempBall.x + round(x_int * count);
     tempY = tempBall.y - round(y_int * count);
     // out of range
-    if (tempX > TERRAIN_WIDTH || tempX < 0) return false;
+    if (tempX > TERRAIN_WIDTH || tempX < 0)
+      return false;
     // no more ground to hit
     if (tempY >= TERRAIN_HEIGHT) {
       // explode at edge of screen
@@ -113,8 +112,7 @@ bool fire(Player *p, Player *p2, Coordinate *ball, Terrain *terrain,
       updateCoordinate(ball, tempX, tempY);
     }
 
-    if ((xIsBase && count == abs(dx)) || count == abs(dy) ||
-        (dy == 0 && dx == 0)) {
+    if ((xIsBase && count == abs(dx)) || count == abs(dy) || (dy == 0 && dx == 0)) {
       dy--;
       tempBall.x = tempX;
       tempBall.y = tempY;
