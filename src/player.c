@@ -93,13 +93,14 @@ bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower) {
 			dy--;
 			tempBall.x = tempX;
 			tempBall.y = tempY;
+			xIsBase = abs(dx) < abs(dy) || dy == 0;
 			y_int = interval(dy,dx);
 			x_int = interval(dx,dy);
 			count = 0;
+			busyWait(100000);
 		}
 		// leave time for graphics to update
-		busyWait(100000);
-		printf("%d,%d\n",tempX,tempY);
+		// printf("%d,%d\n",tempX,tempY);
 		count++;
   }
   return true;
