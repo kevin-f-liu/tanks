@@ -6,7 +6,7 @@
 #include "uart.h"
 
 #define MAX_FIREPOWER 100
-#define RADIUS_OF_DAMAGE 20
+#define RADIUS_OF_DAMAGE 5
 #define MAX_DAMAGE 90
 #define BOUNDARY 4
 

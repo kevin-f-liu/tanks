@@ -331,7 +331,7 @@ void animateExplosion(Coordinate c, Terrain *t) {
         explodeOrClear(&temp, run, map);
 				updateCoordinate(&temp, c.x - i, c.y - j);
         explodeOrClear(&temp, run, map);
-        busyWait(100000);
+        busyWait(1000);
       }
       count--;
     }
