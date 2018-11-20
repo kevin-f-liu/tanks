@@ -19,6 +19,21 @@ void updateHealth(Player *p, Coordinate *land) {
   }
 }
 
+bool isOverlap(Player *p1, Player *p2) {
+  return abs(p1->pos.x - p2->pos.x) < TANK_WIDTH_COORD + 2 &&
+         abs(p1->pos.y - p2->pos.y) < TANK_HEIGHT_COORD;
+}
+
+void updatePositionWithCheck(Player *p, int16_t dx, Terrain *terrain,
+                             Player *p2) {
+  if (dx == 0) return;
+  Player tempPlayer = *p;
+  updatePosition(&tempPlayer, dx, terrain);
+  if (!isOverlap(&tempPlayer, p2)) {
+    *p = tempPlayer;
+  }
+}
+
 void updatePosition(Player *p, int16_t dx, Terrain *terrain) {
   uint16_t newX =
       processValue(p->pos.x + dx, TERRAIN_WIDTH - 1 - TANK_WIDTH_COORD / 2,
@@ -59,8 +74,7 @@ double interval(int32_t self, int32_t other) {
 bool hitTank(Player *p, Coordinate *ball) {
   return (ball->x <= p->pos.x + TANK_WIDTH_COORD / 2) &&
          (ball->x >= p->pos.x - TANK_WIDTH_COORD / 2) &&
-         (ball->y <= p->pos.y + TANK_HEIGHT_COORD / 2) &&
-         (ball->y >= p->pos.y - TANK_HEIGHT_COORD / 2);
+         (ball->y <= p->pos.y) && (ball->y >= p->pos.y - TANK_HEIGHT_COORD);
 }
 
 bool fire(Player *p, Player *p2, Coordinate *ball, Terrain *terrain,
@@ -78,7 +92,7 @@ bool fire(Player *p, Player *p2, Coordinate *ball, Terrain *terrain,
   uint32_t count = 1;
 
   // move until collison or x out of range or y too low
-  while (!collide(terrain, ball) && !hitTank(p, ball) && !hitTank(p2, ball)) {
+  while (!collide(terrain, ball) && !hitTank(p2, ball)) {
     tempX = tempBall.x + round(x_int * count);
     tempY = tempBall.y - round(y_int * count);
     // out of range

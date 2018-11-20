@@ -98,11 +98,11 @@ void joystickWorker(void const *arg) {
     }
     if (delay && !wait) {
       if (isP1) {
-        updatePosition(&p1, changePos, &terrain);
+        updatePositionWithCheck(&p1, changePos, &terrain, &p2);
         updateAim(&p1, -changeAim + p1.aimAngle);
         //ball = p1.pos;
       } else {
-        updatePosition(&p2, changePos, &terrain);
+        updatePositionWithCheck(&p2, changePos, &terrain, &p1);
         updateAim(&p2, changeAim + p2.aimAngle);
         //ball = p2.pos;
       }

@@ -22,6 +22,7 @@ typedef struct {
 
 void setupPlayer(Player *p, bool isP1);
 void updateHealth(Player *p, Coordinate *land);
+void updatePositionWithCheck(Player *p, int16_t dx, Terrain *terrain, Player *p2);
 void updatePosition(Player *p, int16_t newX, Terrain *terrain);
 void updateAim(Player *p, int16_t newAim);
 void printPlayer(Player *p);
