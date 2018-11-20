@@ -30,6 +30,7 @@ typedef struct {
 typedef struct {
   base_sprite base;
   int angle;
+	uint8_t alreadyDrawn;
 } barrel_graph_t;
 
 typedef struct {
@@ -102,10 +103,12 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor, Terrain *te
   b1->base.py = 0;
   b1->base.width = TANK_WIDTH;
   b1->base.height = TANK_WIDTH;
+	b1->alreadyDrawn = 0;
 	b2->base.px = 0;
   b2->base.py = 0;
   b2->base.width = TANK_WIDTH;
   b2->base.height = TANK_WIDTH;
+	b2->alreadyDrawn = 0;
   // Init shot
   shot->base.px = 0;
   shot->base.py = 0;
@@ -229,12 +232,15 @@ void updateTank(int newX, int newY, int newAng, char player, bool redraw) {
   // x and y are the top left corner of a widthXwidth square. Same as barrel	
   tank_graph_t *tank = player == 1 ? t1 : t2;
   barrel_graph_t *barrel = player == 1 ? b1 : b2;
+	barrel_graph_t *otherBarrel = player == 1 ? b2 : b1;
 	
 	// Don't do anything if nothing changes
   if (!redraw && newX == barrel->base.px && newY == barrel->base.py && newAng == barrel->angle) return;
 
   // Update barrel first, if invalid angle, then don't change it
-  if (newAng <= 180 && newAng >= -180) {
+  if ((!barrel->alreadyDrawn || barrel->angle != newAng)  && newAng <= 180 && newAng >= -180) {
+		barrel->alreadyDrawn = true;
+		otherBarrel->alreadyDrawn = false;
     loadBarrelmap(newAng);
   }
 
@@ -267,7 +273,6 @@ void moveTank(Coordinate c, char player) {
   int yPx = pixelFromCoord(c.y) - (TANK_WIDTH - PX_PER_BLOCK);
 
   updateTank(xPx, yPx, barrel->angle, player, false);
-
   Coordinate temp = {.x = 0, .y = 0};
   updateCoordinate(&temp, min(tank->pc->x, c.x) - 4, min(tank->pc->y, c.y) - 7);
   int width = max(tank->pc->x, c.x) - min(tank->pc->x, c.x) + 9;
