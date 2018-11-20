@@ -8,7 +8,6 @@
 void busyWait(uint32_t ticks) {
   for (int i = 0; i < ticks; i++)
     ;
-	printf("end wait\n");
 }
 
 int32_t random(int32_t lower, int32_t upper) {
