@@ -79,18 +79,18 @@ void joystickWorker(void const *arg) {
     bool delay = true;
     switch (~(LPC_GPIO1->FIOPIN) & 0x07800000) {
       case 0x01000000:
-        changePos++;
+        changePos += 1;
         break;
         // down is counter clockwise (25)
       case 0x00800000:
-        changeAim--;
+        changeAim -= 3;
         break;
         // up is clockwise (23)
       case 0x02000000:
-        changeAim++;
+        changeAim += 3;
         break;
       case 0x04000000:
-        changePos--;
+        changePos -= 1;
         break;
       default:
         delay = false;
@@ -99,14 +99,14 @@ void joystickWorker(void const *arg) {
     if (delay && !wait) {
       if (isP1) {
         updatePosition(&p1, changePos, &terrain);
-        updateAim(&p1, changeAim + p1.aimAngle);
+        updateAim(&p1, -changeAim + p1.aimAngle);
         //ball = p1.pos;
       } else {
         updatePosition(&p2, changePos, &terrain);
         updateAim(&p2, changeAim + p2.aimAngle);
         //ball = p2.pos;
       }
-      osDelay(1000);
+      osDelay(1250);
     }
   }
 }
