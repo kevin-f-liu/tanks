@@ -54,28 +54,8 @@ value_bar_t *p1_hp, *p2_hp, *power;
 
 Terrain *t;
 
-void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor, Terrain *te) {
-	t = te;
-  // Should also take in Allison's objects to init
-  // Init LCD module for use, with a background color and textcolor
-  GLCD_Init();
-  GLCD_Clear(cColor);
-  GLCD_SetTextColor(tColor);
-  GLCD_SetBackColor(bColor);
-
-  // Init all sprites and locations
-  t1 = malloc(sizeof(tank_graph_t));
-  t2 = malloc(sizeof(tank_graph_t));
-  t1->pc = malloc(sizeof(Coordinate));
-  t2->pc = malloc(sizeof(Coordinate));
-  b1 = malloc(sizeof(barrel_graph_t));
-  b2 = malloc(sizeof(barrel_graph_t));
-  shot = malloc(sizeof(shot_graph_t));
-  p1_hp = malloc(sizeof(value_bar_t));
-  p2_hp = malloc(sizeof(value_bar_t));
-  power = malloc(sizeof(value_bar_t));
-
-  initBarrelmap(1);
+void resetVars() {
+	initBarrelmap(1);
 
   // Set all spritemaps
   t1->base.spritemap = tankmap1;
@@ -134,6 +114,29 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor, Terrain *te
   p1_hp->val = MAX_BAR_VAL + 1;
   p2_hp->val = MAX_BAR_VAL + 1;
   power->val = MAX_BAR_VAL + 1;  // Just need a value that is higher than max
+}
+void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor, Terrain *te) {
+	t = te;
+  // Should also take in Allison's objects to init
+  // Init LCD module for use, with a background color and textcolor
+  GLCD_Init();
+  GLCD_Clear(cColor);
+  GLCD_SetTextColor(tColor);
+  GLCD_SetBackColor(bColor);
+
+  // Init all sprites and locations
+  t1 = malloc(sizeof(tank_graph_t));
+  t2 = malloc(sizeof(tank_graph_t));
+  t1->pc = malloc(sizeof(Coordinate));
+  t2->pc = malloc(sizeof(Coordinate));
+  b1 = malloc(sizeof(barrel_graph_t));
+  b2 = malloc(sizeof(barrel_graph_t));
+  shot = malloc(sizeof(shot_graph_t));
+  p1_hp = malloc(sizeof(value_bar_t));
+  p2_hp = malloc(sizeof(value_bar_t));
+  power = malloc(sizeof(value_bar_t));
+
+  resetVars();
 }
 
 void displayStringToLCD(int row, int column, int sz, char *str, int clear) {
@@ -401,4 +404,24 @@ void drawPermText(void) {
   displayStringToLCD(0, 3, 0, "Player 1", 0);
   displayStringToLCD(0, 24, 0, "Power", 0);
   displayStringToLCD(0, 42, 0, "Player 2", 0);
+}
+
+void resetGraphics() {
+	drawRect(0, 0, TERRAIN_WIDTH_PX, TERRAIN_HEIGHT_PX, BACKGROUND_COLOR);
+	resetVars();
+	//updateHealthBar(MAX_BAR_VAL + 1, 1);
+	//updateHealthBar(MAX_BAR_VAL + 1, 2);
+	//updatePowerBar(MAX_BAR_VAL + 1);
+}
+
+void displayEndGame(int winner) {
+	drawRect(0, 0, TERRAIN_WIDTH_PX, TERRAIN_HEIGHT_PX, BACKGROUND_COLOR);
+	char str[20];
+	if (winner == 3) {
+		sprintf(str, "TIE");
+	} else {
+		sprintf(str, "Player %d Wins!", winner);
+	}
+	displayStringToLCD(3, 3, 1, str, 0);
+	displayStringToLCD(15, 11, 0, "Press the button to play again!", 0);
 }

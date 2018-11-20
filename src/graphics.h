@@ -30,12 +30,14 @@
 #define EMPTY_BAR_COLOR 0x6B4D
 
 void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor, Terrain *te);
+void resetGraphics();
 void displayStringToLCD(int row, int column, int sz, char* str, int clear);
 void drawTerrain(Terrain* t);
 void initTank(Coordinate c, int angle, int player);
 void updatePowerBar(uint8_t newVal);
 void updateHealthBar(uint8_t newVal, int player);
 void drawPermText(void);
+void displayEndGame(int winner);
 void moveTank(Coordinate c, char player);
 void aimTank(int newAng, char player);
 //void updateShot(Coordinate c);

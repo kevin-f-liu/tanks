@@ -34,18 +34,20 @@ void setupGame() {
   wait = true;
   generateTerrain(&terrain);
   setupPlayer(&p1, true);
-  updatePosition(&p1, random(0, TERRAIN_WIDTH / 2), &terrain);
+  updatePosition(&p1, random(0, TERRAIN_WIDTH / 4), &terrain);
   //ball = p1.pos;
 	hideShot(&ball);
   setupPlayer(&p2, false);
-  updatePosition(&p2, random(TERRAIN_WIDTH / 2, TERRAIN_WIDTH), &terrain);
+  updatePosition(&p2, random(3 * TERRAIN_WIDTH / 4, TERRAIN_WIDTH), &terrain);
   printf("Pos: (%d,%d), (%d,%d)\n", p1.pos.x, p1.pos.y, p2.pos.x, p2.pos.y);
-
+	
+  resetGraphics();
   drawTerrain(&terrain);
 
   // Init tanks
   initTank(p1.pos, p1.aimAngle, 1);
   initTank(p2.pos, p2.aimAngle, 2);
+	drawPermText();
 
   wait = false;
 }
@@ -153,8 +155,10 @@ void gameWorker(void const *arg) {
     // printTerrain(&terrain);
     // check if game ends
     if (p1.HP <= 0 || p2.HP <= 0) {
-      printf("Game Ended\n");
       newGame = true;
+			int gameResult = ((p1.HP <= 0) << 1) | (p2.HP <= 0); // 3 for tie, 1 for p1 win, 2 for p2 win
+			displayEndGame(gameResult);
+      printf("Game Ended\n");
     } else {
       // switch turn
       isP1 = !isP1;
@@ -168,15 +172,15 @@ void gameWorker(void const *arg) {
 }
 
 void graphicsWorker(void const *arg) {
-  // printf("starting graphics worker\n");
-  drawPermText();
   while (true) {
+		if (!newGame){
     // sprintf(result, "%d", count);
     // displayStringToLCD(29, 0, 0, result, 5);
     if (collided) {
       impact(ball, &terrain);
       collided = false;
       // signal game worker to continue after explosion animation
+			printf("RELEASSING\n");
       osSemaphoreRelease(graphics);
     }
     updateGraphics(&p1, true);
@@ -185,6 +189,7 @@ void graphicsWorker(void const *arg) {
     updateShot(ball.x * 4, ball.y * 4);
     updatePowerBar(firepower);
     // osDelay(300);
+	}
   }
 }
 
