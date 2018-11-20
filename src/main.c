@@ -141,7 +141,7 @@ void gameWorker(void const *arg) {
     wait = true;
     // maybe use mutex instead of priorityHigh thread
     printf("Firepower: %d\n", firepower);
-    collided = fire(isP1 ? &p1 : &p2, &ball, &terrain, firepower);
+    collided = fire(isP1 ? &p1 : &p2, isP1 ? &p2 : &p1, &ball, &terrain, firepower);
     if (collided) {
       // update terrain
       damage(&terrain, &ball);

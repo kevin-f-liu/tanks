@@ -1,9 +1,9 @@
 #include "player.h"
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "graphics.h"
 #include "helper.h"
-#include <stdlib.h>
 
 void setupPlayer(Player *p, bool isP1) {
   p->HP = 100;
@@ -20,10 +20,12 @@ void updateHealth(Player *p, Coordinate *land) {
 }
 
 void updatePosition(Player *p, int16_t dx, Terrain *terrain) {
-  uint16_t newX = processValue(p->pos.x + dx, TERRAIN_WIDTH - 1 - BOUNDARY, BOUNDARY);
-	uint32_t newY = closestGround(terrain, newX, p->pos.y);
-	int32_t ceil = ceiling(terrain, p->pos.x, p->pos.y);
-	if (ceil >= 0 && ceil >= newY)  return;
+  uint16_t newX =
+      processValue(p->pos.x + dx, TERRAIN_WIDTH - 1 - TANK_WIDTH_COORD / 2,
+                   TANK_WIDTH_COORD / 2);
+  uint32_t newY = closestGround(terrain, newX, p->pos.y);
+  int32_t ceil = ceiling(terrain, p->pos.x, p->pos.y);
+  if (ceil >= 0 && ceil >= newY) return;
   updateCoordinate(&p->pos, newX, newY);
 }
 
@@ -44,31 +46,39 @@ void updateStatus(Player *p, Terrain *terrain, Coordinate *ball) {
   printPlayer(p);
 }
 
-double interval(int32_t self, int32_t other){
-	if (self == 0) return 0;
-	// if i am smaller than the other, use me as the base
-	if (abs(self) < abs(other) || other == 0){
-		if (self < 0) return -1;
-		return 1;
-	}			
-	return (double)self/abs(other);
+double interval(int32_t self, int32_t other) {
+  if (self == 0) return 0;
+  // if i am smaller than the other, use me as the base
+  if (abs(self) < abs(other) || other == 0) {
+    if (self < 0) return -1;
+    return 1;
+  }
+  return (double)self / abs(other);
 }
 
-bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower) {
-  int32_t dx = round(firepower/10.0 * cos(toRad(p->aimAngle)));
-  int32_t dy = round(firepower/10.0 * sin(toRad(p->aimAngle)));
-	bool xIsBase = abs(dx) < abs(dy) || dy == 0;
-	*ball = p->pos;
-	ball->y -= 3;
-	Coordinate tempBall = *ball;
+bool hitTank(Player *p, Coordinate *ball) {
+  return (ball->x <= p->pos.x + TANK_WIDTH_COORD / 2) &&
+         (ball->x >= p->pos.x - TANK_WIDTH_COORD / 2) &&
+         (ball->y <= p->pos.y + TANK_HEIGHT_COORD / 2) &&
+         (ball->y >= p->pos.y - TANK_HEIGHT_COORD / 2);
+}
+
+bool fire(Player *p, Player *p2, Coordinate *ball, Terrain *terrain,
+          uint16_t firepower) {
+  int32_t dx = round(firepower / 10.0 * cos(toRad(p->aimAngle)));
+  int32_t dy = round(firepower / 10.0 * sin(toRad(p->aimAngle)));
+  bool xIsBase = abs(dx) < abs(dy) || dy == 0;
+  *ball = p->pos;
+  ball->y -= 3;
+  Coordinate tempBall = *ball;
   int32_t tempX = tempBall.x;
   int32_t tempY = tempBall.y;
-	double y_int = interval(dy,dx);
-	double x_int = interval(dx,dy);
-	uint32_t count = 1;
-	
+  double y_int = interval(dy, dx);
+  double x_int = interval(dx, dy);
+  uint32_t count = 1;
+
   // move until collison or x out of range or y too low
-  while (!collide(terrain, ball)) {
+  while (!collide(terrain, ball) && !hitTank(p, ball) && !hitTank(p2, ball)) {
     tempX = tempBall.x + round(x_int * count);
     tempY = tempBall.y - round(y_int * count);
     // out of range
@@ -76,7 +86,7 @@ bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower) {
     // no more ground to hit
     if (tempY >= TERRAIN_HEIGHT) {
       // explode at edge of screen
-			updateCoordinate(ball, tempX, TERRAIN_HEIGHT - 1);
+      updateCoordinate(ball, tempX, TERRAIN_HEIGHT - 1);
       return true;
     }
 
@@ -86,22 +96,23 @@ bool fire(Player *p, Coordinate *ball, Terrain *terrain, uint16_t firepower) {
     }
     // when ball is inside the screen, that's when collision will happen
     else {
-			updateCoordinate(ball, tempX, tempY);
+      updateCoordinate(ball, tempX, tempY);
     }
 
-		if ((xIsBase && count == abs(dx)) || count == abs(dy)|| (dy == 0 && dx == 0)){
-			dy--;
-			tempBall.x = tempX;
-			tempBall.y = tempY;
-			xIsBase = abs(dx) < abs(dy) || dy == 0;
-			y_int = interval(dy,dx);
-			x_int = interval(dx,dy);
-			count = 0;
-			busyWait(100000);
-		}
-		// leave time for graphics to update
-		// printf("%d,%d\n",tempX,tempY);
-		count++;
+    if ((xIsBase && count == abs(dx)) || count == abs(dy) ||
+        (dy == 0 && dx == 0)) {
+      dy--;
+      tempBall.x = tempX;
+      tempBall.y = tempY;
+      xIsBase = abs(dx) < abs(dy) || dy == 0;
+      y_int = interval(dy, dx);
+      x_int = interval(dx, dy);
+      count = 0;
+      busyWait(300000);
+    }
+    // leave time for graphics to update
+    // printf("%d,%d\n",tempX,tempY);
+    count++;
   }
   return true;
 }
@@ -113,7 +124,6 @@ void updateGraphics(Player *p, bool isP1) {
   updateHealthBar(p->HP, playerNum);
 }
 
-void hideShot(Coordinate *ball){
-	updateCoordinate(ball,0,TERRAIN_HEIGHT-1);
+void hideShot(Coordinate *ball) {
+  updateCoordinate(ball, 0, TERRAIN_HEIGHT - 1);
 }
-
