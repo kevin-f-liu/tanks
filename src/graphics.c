@@ -30,6 +30,7 @@ typedef struct {
 typedef struct {
   base_sprite base;
   int angle;
+	uint8_t alreadyDrawn;
 } barrel_graph_t;
 
 typedef struct {
@@ -102,10 +103,12 @@ void initGraphics(uint16_t cColor, uint16_t bColor, uint16_t tColor, Terrain *te
   b1->base.py = 0;
   b1->base.width = TANK_WIDTH;
   b1->base.height = TANK_WIDTH;
+	b1->alreadyDrawn = 0;
 	b2->base.px = 0;
   b2->base.py = 0;
   b2->base.width = TANK_WIDTH;
   b2->base.height = TANK_WIDTH;
+	b2->alreadyDrawn = 0;
   // Init shot
   shot->base.px = 0;
   shot->base.py = 0;
@@ -225,22 +228,27 @@ void drawTerrain(Terrain *t) {
   drawTerrainSection(t, o, TERRAIN_WIDTH, TERRAIN_HEIGHT);
 }
 
-void updateTank(int newX, int newY, int newAng, char player) {
+void updateTank(int newX, int newY, int newAng, char player, bool redraw) {
   // x and y are the top left corner of a widthXwidth square. Same as barrel	
   tank_graph_t *tank = player == 1 ? t1 : t2;
   barrel_graph_t *barrel = player == 1 ? b1 : b2;
+	barrel_graph_t *otherBarrel = player == 1 ? b2 : b1;
 	
 	// Don't do anything if nothing changes
-  if (newX == barrel->base.px && newY == barrel->base.py && newAng == barrel->angle) return;
+  if (!redraw && newX == barrel->base.px && newY == barrel->base.py && newAng == barrel->angle) return;
 
   // Update barrel first, if invalid angle, then don't change it
-  if (newAng <= 180 && newAng >= -180) {
+  if ((!barrel->alreadyDrawn || barrel->angle != newAng)  && newAng <= 180 && newAng >= -180) {
+		barrel->alreadyDrawn = true;
+		otherBarrel->alreadyDrawn = false;
     loadBarrelmap(newAng);
   }
 
-  // Barrel map completely overlaps tank bitmap, so clear that one
-  clearRect(barrel->base.px, barrel->base.py, barrel->base.width,
+	if (!redraw) {
+		// Barrel map completely overlaps tank bitmap, so clear that one
+		clearRect(barrel->base.px, barrel->base.py, barrel->base.width,
             barrel->base.height);
+	}
 
   // Barrel update should go first to draw tank on top of barrel
   displayBitmapToLCD(newX, newY, barrel->base.width, barrel->base.height,
@@ -264,8 +272,7 @@ void moveTank(Coordinate c, char player) {
   int xPx = pixelFromCoord(c.x) - (TANK_WIDTH / 2 - PX_PER_BLOCK / 2);
   int yPx = pixelFromCoord(c.y) - (TANK_WIDTH - PX_PER_BLOCK);
 
-  updateTank(xPx, yPx, barrel->angle, player);
-
+  updateTank(xPx, yPx, barrel->angle, player, false);
   Coordinate temp = {.x = 0, .y = 0};
   updateCoordinate(&temp, min(tank->pc->x, c.x) - 4, min(tank->pc->y, c.y) - 7);
   int width = max(tank->pc->x, c.x) - min(tank->pc->x, c.x) + 9;
@@ -283,7 +290,7 @@ void aimTank(int newAng, char player) {
   barrel_graph_t *barrel = player == 1 ? b1 : b2;
 
   // use the coordinate of the barrel so that tank does not move
-  updateTank(barrel->base.px, barrel->base.py, newAng, player);
+  updateTank(barrel->base.px, barrel->base.py, newAng, player, false);
 }
 
 void initTank(Coordinate c, int angle, int player) {
@@ -336,6 +343,9 @@ void animateExplosion(Coordinate c, Terrain *t) {
       count--;
     }
   }
+	
+	updateTank(b1->base.px, b1->base.py, b1->angle, 1, true);
+	updateTank(b2->base.px, b2->base.py, b2->angle, 2, true);
 }
 
 void impact(Coordinate c, Terrain *t) {
