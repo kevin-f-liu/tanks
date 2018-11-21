@@ -72,7 +72,7 @@ double interval(int32_t self, int32_t other) {
 }
 
 bool hitTank(Player *p, Coordinate *ball) {
-  return (ball->x <= p->pos.x + TANK_WIDTH_COORD / 2) && (ball->x >= p->pos.x - TANK_WIDTH_COORD / 2) &&
+  return (ball->x <= p->pos.x + TANK_WIDTH_COORD / 2 - 2) && (ball->x >= p->pos.x - TANK_WIDTH_COORD / 2 + 2) &&
          (ball->y <= p->pos.y) && (ball->y >= p->pos.y - TANK_HEIGHT_COORD);
 }
 

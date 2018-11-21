@@ -354,7 +354,6 @@ void animateExplosion(Coordinate c, Terrain *t) {
         explodeOrClear(&temp, run, map);
         updateCoordinate(&temp, c.x - i, c.y - j);
         explodeOrClear(&temp, run, map);
-        busyWait(1000);
       }
       count--;
     }
@@ -367,9 +366,12 @@ void animateExplosion(Coordinate c, Terrain *t) {
 
 void impact(Coordinate c, Terrain *t) {
   // Animate explosion impact and rerender terrain
+	printf("impacting\n");
   animateExplosion(c, t);
+	printf("animated\n");
   updateCoordinate(&c, c.x - RADIUS_OF_DAMAGE, c.y - RADIUS_OF_DAMAGE);
   drawTerrainSection(t, c, 2 * RADIUS_OF_DAMAGE + 1, 2 * RADIUS_OF_DAMAGE + 1);
+	printf("terrain regened\n");
 }
 
 uint16_t barValueToPixels(uint8_t val) {
